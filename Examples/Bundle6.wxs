@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  This example demostrates the of an external theme file to create the same UI as Hyperlink2License built in to WixBalExtensionExt.
-  
-  It also shows the use of two folder selections and radio buttons on the options page.
+  This example demostrates the Hyperlink2License UI built in to WixBalExtensionExt.
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
@@ -11,19 +9,12 @@
     Manufacturer="ACME"
     AboutUrl="http://wixtoolset.org">
 
-    <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
+    <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.Hyperlink2License">
       <Payload SourceFile="Resource\License.htm" />
-      <Payload SourceFile="Resource\LogoSide.png" />
-      <Payload SourceFile="Resource\Logo.png" />
     </BootstrapperApplicationRef>
     <WixVariable Id="WixExtbaLicenseUrl" Value="License.htm" />
-    <WixVariable Id="WixExtbaThemeXml" Value="Resource\Bundle2Theme.xml" />
-    <WixVariable Id="WixExtbaThemeWxl" Value="Resource\HyperlinkTheme.wxl" />
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />
-    <Variable Name="InstallFolder2" Type="string" Value="[WindowsVolume]Database" />
-
-    <Variable Name="RadioButton1" Type="numeric" Value="1" />
 
     <Chain>
       <PackageGroupRef Id="NetFx40Redist" />

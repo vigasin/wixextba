@@ -1,14 +1,19 @@
 <?xml version="1.0"?>
+<!--
+  This example demostrates the of an external theme file to create the same UI as Hyperlink2License built in to WixBalExtensionExt.
+  
+  It also shows the use of checkboxes on the install and option pages.
+-->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
   xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <Bundle Name="Sample Burn Installation" Version="1.0.0.0" UpgradeCode="2C81F0BB-1891-4E83-B71A-5160BA33D985"
+  <Bundle Name="Sample Burn Installation" Version="$(bal.Version(1.0))" UpgradeCode="2C81F0BB-1891-4E83-B71A-5160BA33D985"
     Manufacturer="ACME"
     AboutUrl="http://wixtoolset.org">
 
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
       <Payload SourceFile="Resource\LogoSide.png" />
-      <Payload SourceFile="Resource\LogoSmall.png" />
+      <Payload SourceFile="Resource\Logo.png" />
     </BootstrapperApplicationRef>
     <WixVariable Id="WixExtbaLicenseUrl" Value="" />
     <WixVariable Id="WixExtbaThemeXml" Value="Resource\Bundle4Theme.xml" />

@@ -1,14 +1,18 @@
 <?xml version="1.0"?>
+<!--
+  This example demostrates the HyperlinkLicense UI built in to WixBalExtensionExt.
+-->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
   xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <Bundle Name="Sample Burn Installation" Version="1.0.0.0" UpgradeCode="2C81F0BB-1891-4E83-B71A-5160BA33D985"
+  <Bundle Name="Sample Burn Installation" Version="$(bal.Version(1.0))" UpgradeCode="2C81F0BB-1891-4E83-B71A-5160BA33D985"
     Manufacturer="ACME"
     AboutUrl="http://wixtoolset.org">
 
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
-      <bal:WixExtendedBootstrapperApplication SuppressOptionsUI="yes" LicenseUrl="" />
+      <Payload SourceFile="Resource\License.htm" />
     </BootstrapperApplicationRef>
+    <WixVariable Id="WixExtbaLicenseUrl" Value="License.htm" />
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />
     <Variable Name="InstallFolder2" Type="string" Value="[WindowsVolume]Database" />

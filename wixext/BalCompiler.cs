@@ -5,7 +5,7 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
+//
 // <summary>
 // The compiler for the Windows Installer XML Toolset Bal Extension.
 // </summary>
@@ -16,8 +16,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Globalization;
-    using System.IO;
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
@@ -36,6 +34,21 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// </summary>
         public BalCompiler()
         {
+            // Check calling toolset version, if must match this assemblies major.minor version
+            var assemblyCaller = Assembly.GetCallingAssembly();
+            var fviCaller = FileVersionInfo.GetVersionInfo(assemblyCaller.Location);
+
+            var assemblyThis = Assembly.GetExecutingAssembly();
+            var fviThis = FileVersionInfo.GetVersionInfo(assemblyThis.Location);
+
+            var versionThis = new Version(fviThis.FileMajorPart, fviThis.FileMinorPart);
+            var versionCaller = new Version(fviCaller.FileMajorPart, fviCaller.FileMinorPart);
+
+            if (versionCaller != versionThis)
+            {
+                throw new WixException(WixErrors.InvalidExtension("BalExtension", "Toolset version not supported."));
+            }
+
             this.addedConditionLineNumber = null;
             this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.bal.xsd");
         }
@@ -77,6 +90,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     {
                         case "WixExtendedBootstrapperApplication":
                             this.ParseWixExtendedBootstrapperApplicationElement(element);
+                            break;
+                        case "WixManagedBootstrapperApplicationHost":
+                            this.ParseWixManagedBootstrapperApplicationHostElement(element);
                             break;
                         default:
                             this.Core.UnexpectedElement(parentElement, element);
@@ -210,6 +226,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
+            string logoSideFile = null;
             string themeFile = null;
             string localizationFile = null;
             YesNoType suppressOptionsUI = YesNoType.NotSet;
@@ -229,6 +246,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "LogoFile":
                             logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        case "LogoSideFile":
+                            logoSideFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
                         case "ThemeFile":
                             themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
@@ -290,6 +310,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaLogo", logoFile, false);
                 }
 
+                if (!String.IsNullOrEmpty(logoSideFile))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaLogoSide", logoSideFile, false);
+                }
+
                 if (!String.IsNullOrEmpty(themeFile))
                 {
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaThemeXml", themeFile, false);
@@ -312,6 +337,109 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     {
                         row[1] = 1;
                     }
+				}
+            }
+        }
+
+        /// <summary>
+        /// Parses a WixManagedBootstrapperApplicationHost element for Bundles.
+        /// </summary>
+        /// <param name="node">The element to parse.</param>
+        private void ParseWixManagedBootstrapperApplicationHostElement(XmlNode node)
+        {
+            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            string licenseFile = null;
+            string licenseUrl = null;
+            string logoFile = null;
+            string themeFile = null;
+            string localizationFile = null;
+            string netFxPackageId = null;
+
+            foreach (XmlAttribute attrib in node.Attributes)
+            {
+                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                {
+                    switch (attrib.LocalName)
+                    {
+                        case "LicenseFile":
+                            licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        case "LicenseUrl":
+                            licenseUrl = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        case "LogoFile":
+                            logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        case "ThemeFile":
+                            themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        case "LocalizationFile":
+                            localizationFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        case "NetFxPackageId":
+                            netFxPackageId = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+                        default:
+                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            break;
+                    }
+                }
+                else
+                {
+                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                }
+            }
+
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                if (XmlNodeType.Element == child.NodeType)
+                {
+                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    {
+                        this.Core.UnexpectedElement(node, child);
+                    }
+                    else
+                    {
+                        this.Core.UnsupportedExtensionElement(node, child);
+                    }
+                }
+            }
+
+            if (String.IsNullOrEmpty(licenseFile) == String.IsNullOrEmpty(licenseUrl))
+            {
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "LicenseFile", "LicenseUrl", true));
+            }
+
+            if (!this.Core.EncounteredError)
+            {
+                if (!String.IsNullOrEmpty(licenseFile))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqLicenseRtf", licenseFile, false);
+                }
+
+                if (!String.IsNullOrEmpty(licenseUrl))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqLicenseUrl", licenseUrl, false);
+                }
+
+                if (!String.IsNullOrEmpty(logoFile))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaLogo", logoFile, false);
+                }
+
+                if (!String.IsNullOrEmpty(themeFile))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaThemeXml", themeFile, false);
+                }
+
+                if (!String.IsNullOrEmpty(localizationFile))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaThemeWxl", localizationFile, false);
+                }
+
+                if (!String.IsNullOrEmpty(netFxPackageId))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqPackageId", netFxPackageId, false);
                 }
             }
         }

@@ -935,7 +935,7 @@ private: // privates
     {
         HRESULT hr = S_OK;
         LPWSTR sczLocPath = NULL;
-        LPCWSTR wzLocFileName = L"thm.wxl";
+        LPCWSTR wzLocFileName = m_fPrereq ? L"mbapreq.wxl" : L"thm.wxl";
 
         hr = LocProbeForFile(wzModulePath, wzLocFileName, wzLanguage, &sczLocPath);
         BalExitOnFailure2(hr, "Failed to probe for loc file: %ls in path: %ls", wzLocFileName, wzModulePath);
@@ -968,7 +968,7 @@ private: // privates
     {
         HRESULT hr = S_OK;
         LPWSTR sczThemePath = NULL;
-        LPCWSTR wzThemeFileName = L"thm.xml";
+        LPCWSTR wzThemeFileName = m_fPrereq ? L"mbapreq.thm" : L"thm.xml";
         LPWSTR sczCaption = NULL;
 
         hr = LocProbeForFile(wzModulePath, wzThemeFileName, wzLanguage, &sczThemePath);

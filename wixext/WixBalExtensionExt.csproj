@@ -58,6 +58,7 @@
     <Compile Include="BalCompiler.cs" />
     <Compile Include="BalExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="BalPreprocessorExtension.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

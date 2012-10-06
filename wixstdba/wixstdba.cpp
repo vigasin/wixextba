@@ -59,3 +59,27 @@ extern "C" void WINAPI BootstrapperApplicationDestroy()
 {
     BalUninitialize();
 }
+
+
+extern "C" HRESULT WINAPI MbaPrereqBootstrapperApplicationCreate(
+    __in IBootstrapperEngine* pEngine,
+    __in const BOOTSTRAPPER_COMMAND* pCommand,
+    __out IBootstrapperApplication** ppApplication
+    )
+{
+    HRESULT hr = S_OK;
+
+    BalInitialize(pEngine);
+
+    hr = CreateBootstrapperApplication(vhInstance, TRUE, pEngine, pCommand, ppApplication);
+    BalExitOnFailure(hr, "Failed to create managed prerequisite bootstrapper application interface.");
+
+LExit:
+    return hr;
+}
+
+
+extern "C" void WINAPI MbaPrereqBootstrapperApplicationDestroy()
+{
+    BalUninitialize();
+}

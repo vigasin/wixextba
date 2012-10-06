@@ -5,7 +5,7 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
+//
 // <summary>
 // The Windows Installer XML Toolset Bal extension.
 // </summary>
@@ -13,7 +13,6 @@
 
 namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 {
-    using System;
     using System.Reflection;
 
     /// <summary>
@@ -25,6 +24,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         private Library library;
         private TableDefinitionCollection tableDefinitions;
 
+        private BalPreprocessorExtension preprocessorExtension;
+        
         /// <summary>
         /// Gets the optional compiler extension.
         /// </summary>
@@ -72,6 +73,23 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             }
 
             return this.library;
+        }
+
+        /// <summary>
+        /// Gets the optional preprocessor extension.
+        /// </summary>
+        /// <value>The optional preprocessor extension.</value>
+        public override PreprocessorExtension PreprocessorExtension
+        {
+            get
+            {
+                if (null == this.preprocessorExtension)
+                {
+                    this.preprocessorExtension = new BalPreprocessorExtension();
+                }
+
+                return this.preprocessorExtension;
+            }
         }
     }
 }

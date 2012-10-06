@@ -74,9 +74,9 @@
     #endif
 #endif
 
-#define VER_FILE_VERSION             rmj, rmm, rup, 0
-#define VER_PRODUCT_VERSION          rmj, rmm, rup, 0
-#define VER_FILE_VERSION_STRING      szVerMajorMinorBuild
+#define VER_FILE_VERSION             rmj, rmm, rbd, rev
+#define VER_PRODUCT_VERSION          rmj, rmm, rbd, rev
+#define VER_FILE_VERSION_STRING      szVerMajorMinorBuildRev
 #define VER_PRODUCT_VERSION_STRING   VER_FILE_VERSION_STRING
 #define VER_FILE_FLAGS_MASK          VS_FFI_FILEFLAGSMASK
 #define VER_FILE_FLAGS               (VER_DEBUG | VER_PRIVATE_BUILD | VER_PRE_RELEASE)
