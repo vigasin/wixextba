@@ -14,6 +14,7 @@ Call :build Bundle4
 Call :build Bundle5
 Call :build Bundle6
 Call :build Bundle7
+Call :build Bundle8
 
 rd obj /q/s 2>nul 1>nul
 
