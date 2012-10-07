@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!--
-  This example demostrates the RtfLicense UI built in to WixBalExtensionExt.
+  This example demonstrates the RtfLicense UI built in to WixBalExtensionExt.
   
-  Also shows how to replace the standard logo with your own.
+  It also shows how to replace the standard logo with your own.
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  This example demostrates the of an external theme file to create the same UI as Hyperlink2License built in to WixBalExtensionExt.
+  This example demonstrates the of an external theme file to create the same UI as Hyperlink2License built in to WixBalExtensionExt.
   
   It also shows the use of checkboxes on the install and option pages.
 -->

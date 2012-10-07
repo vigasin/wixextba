@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  This example demostrates the HyperlinkLicense UI built in to WixBalExtensionExt.
+  This example demonstrates the HyperlinkLicense UI built in to WixBalExtensionExt.
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
