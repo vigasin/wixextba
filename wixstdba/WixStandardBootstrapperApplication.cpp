@@ -1770,7 +1770,8 @@ private: // privates
                         // If we are on the install or options page and this is a named checkbox control, try to set its default
                         // state to the state of a matching named Burn variable.
                         if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) && 
-                            THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName)
+                            THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName && 
+							WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
                         {
                             LONGLONG llValue = 0;
                             HRESULT hr = m_pEngine->GetVariableNumeric(pControl->sczName, &llValue);
@@ -1860,6 +1861,7 @@ private: // privates
     //
     void OnClickOptionsButton()
     {
+		SaveInstallPage();
         m_stateBeforeOptions = m_state;
         SetState(WIXSTDBA_STATE_OPTIONS, S_OK);
     }
@@ -1983,27 +1985,9 @@ private: // privates
     //
     void OnClickInstallButton()
     {
-        THEME_PAGE* pPage = NULL;
+		SaveInstallPage();
 
-        // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable
-        // with that name to true or false.
-        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL]);
-        if (pPage)
-        {
-            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
-            {
-                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
-                if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
-                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && 
-                    pControl->sczName && *pControl->sczName))
-                {
-                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
-                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
-                }
-            }
-        }
-
-        this->OnPlan(BOOTSTRAPPER_ACTION_INSTALL);
+		this->OnPlan(BOOTSTRAPPER_ACTION_INSTALL);
     }
 
 
@@ -2334,6 +2318,30 @@ private: // privates
         SetTaskbarButtonState(flag);
     }
 
+
+    void SaveInstallPage()
+	{
+        THEME_PAGE* pPage = NULL;
+
+        // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable
+        // with that name to true or false.
+        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL]);
+        if (pPage)
+        {
+            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
+            {
+                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
+                if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
+                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && 
+                    pControl->sczName && *pControl->sczName))
+                {
+                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
+                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
+                }
+            }
+        }
+	}
+	
 
 public:
     //
