@@ -25,8 +25,15 @@
 
     <Variable Name="RadioButton2" Type="numeric" Value="1" />
 
-    <Chain>
+    <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />
+      <MsiPackage
+        Id="Setup"
+        Compressed="yes"
+        SourceFile="Setup.msi"
+        Vital="yes">
+        <MsiProperty Name="APPLICATIONFOLDER" Value="[InstallFolder]" />
+      </MsiPackage>
     </Chain>
 
   </Bundle>

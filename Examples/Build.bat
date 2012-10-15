@@ -7,14 +7,22 @@ md obj 1>nul 2>nul
 
 echo Building examples...
 
-Call :build Bundle1
-Call :build Bundle2
-Call :build Bundle3
-Call :build Bundle4
-Call :build Bundle5
-Call :build Bundle6
-Call :build Bundle7
-Call :build Bundle8
+Call :build Setup msi
+Call :build Bundle1 exe
+Call :build Setup msi
+Call :build Bundle2 exe
+Call :build Setup msi
+Call :build Bundle3 exe
+Call :build Setup msi
+Call :build Bundle4 exe
+Call :build Setup msi
+Call :build Bundle5 exe
+Call :build Setup msi
+Call :build Bundle6 exe
+Call :build Setup msi
+Call :build Bundle7 exe
+Call :build Setup msi
+Call :build Bundle8 exe
 
 rd obj /q/s 2>nul 1>nul
 
@@ -39,7 +47,7 @@ if %errorlevel% neq 0 (
   goto :EOF
 )
 
-light -nologo -spdb -ext WixUtilExtension -ext WixNetFxExtension -ext ..\build\WixBalExtensionExt.dll obj\%1.wixobj -o %1.exe
+light -nologo -spdb -ext WixUtilExtension -ext WixNetFxExtension -ext ..\build\WixBalExtensionExt.dll obj\%1.wixobj -o %1.%2
 if %errorlevel% neq 0 (
   echo Light error: %errorlevel%
   pause

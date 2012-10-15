@@ -16,8 +16,15 @@
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />
 
-    <Chain>
+    <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />
+      <MsiPackage
+        Id="Setup"
+        Compressed="yes"
+        SourceFile="Setup.msi"
+        Vital="yes">
+        <MsiProperty Name="APPLICATIONFOLDER" Value="[InstallFolder]" />
+      </MsiPackage>
     </Chain>
 
   </Bundle>
