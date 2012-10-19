@@ -91,9 +91,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                         case "WixExtendedBootstrapperApplication":
                             this.ParseWixExtendedBootstrapperApplicationElement(element);
                             break;
-                        case "WixManagedBootstrapperApplicationHost":
-                            this.ParseWixManagedBootstrapperApplicationHostElement(element);
-                            break;
                         default:
                             this.Core.UnexpectedElement(parentElement, element);
                             break;
@@ -338,109 +335,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                         row[1] = 1;
                     }
 				}
-            }
-        }
-
-        /// <summary>
-        /// Parses a WixManagedBootstrapperApplicationHost element for Bundles.
-        /// </summary>
-        /// <param name="node">The element to parse.</param>
-        private void ParseWixManagedBootstrapperApplicationHostElement(XmlNode node)
-        {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
-            string licenseFile = null;
-            string licenseUrl = null;
-            string logoFile = null;
-            string themeFile = null;
-            string localizationFile = null;
-            string netFxPackageId = null;
-
-            foreach (XmlAttribute attrib in node.Attributes)
-            {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
-                {
-                    switch (attrib.LocalName)
-                    {
-                        case "LicenseFile":
-                            licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
-                            break;
-                        case "LicenseUrl":
-                            licenseUrl = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
-                            break;
-                        case "LogoFile":
-                            logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
-                            break;
-                        case "ThemeFile":
-                            themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
-                            break;
-                        case "LocalizationFile":
-                            localizationFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
-                            break;
-                        case "NetFxPackageId":
-                            netFxPackageId = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
-                            break;
-                        default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
-                            break;
-                    }
-                }
-                else
-                {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
-                }
-            }
-
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
-
-            if (String.IsNullOrEmpty(licenseFile) == String.IsNullOrEmpty(licenseUrl))
-            {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "LicenseFile", "LicenseUrl", true));
-            }
-
-            if (!this.Core.EncounteredError)
-            {
-                if (!String.IsNullOrEmpty(licenseFile))
-                {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqLicenseRtf", licenseFile, false);
-                }
-
-                if (!String.IsNullOrEmpty(licenseUrl))
-                {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqLicenseUrl", licenseUrl, false);
-                }
-
-                if (!String.IsNullOrEmpty(logoFile))
-                {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaLogo", logoFile, false);
-                }
-
-                if (!String.IsNullOrEmpty(themeFile))
-                {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaThemeXml", themeFile, false);
-                }
-
-                if (!String.IsNullOrEmpty(localizationFile))
-                {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaThemeWxl", localizationFile, false);
-                }
-
-                if (!String.IsNullOrEmpty(netFxPackageId))
-                {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqPackageId", netFxPackageId, false);
-                }
             }
         }
     }

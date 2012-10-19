@@ -829,17 +829,8 @@ private: // privates
         hr = BalConditionsParseFromXml(&m_Conditions, pixdManifest, m_pWixLoc);
         BalExitOnFailure(hr, "Failed to load conditions from XML.");
 
-        if (m_fPrereq)
-        {
-            hr = ParsePrerequisiteInformationFromXml(pixdManifest);
-            BalExitOnFailure(hr, "Failed to read prerequisite information.");
-        }
-        else
-        {
-
-            hr = ParseBootrapperApplicationDataFromXml(pixdManifest);
-            BalExitOnFailure(hr, "Failed to read bootstrapper application data.");
-        }
+        hr = ParseBootrapperApplicationDataFromXml(pixdManifest);
+        BalExitOnFailure(hr, "Failed to read bootstrapper application data.");
 
     LExit:
         ReleaseObject(pixdManifest);
@@ -935,7 +926,7 @@ private: // privates
     {
         HRESULT hr = S_OK;
         LPWSTR sczLocPath = NULL;
-        LPCWSTR wzLocFileName = m_fPrereq ? L"mbapreq.wxl" : L"thm.wxl";
+        LPCWSTR wzLocFileName = L"thm.wxl";
 
         hr = LocProbeForFile(wzModulePath, wzLocFileName, wzLanguage, &sczLocPath);
         BalExitOnFailure2(hr, "Failed to probe for loc file: %ls in path: %ls", wzLocFileName, wzModulePath);
@@ -968,7 +959,7 @@ private: // privates
     {
         HRESULT hr = S_OK;
         LPWSTR sczThemePath = NULL;
-        LPCWSTR wzThemeFileName = m_fPrereq ? L"mbapreq.thm" : L"thm.xml";
+        LPCWSTR wzThemeFileName = L"thm.xml";
         LPWSTR sczCaption = NULL;
 
         hr = LocProbeForFile(wzModulePath, wzThemeFileName, wzLanguage, &sczThemePath);
