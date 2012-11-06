@@ -16,7 +16,6 @@
     </BootstrapperApplicationRef>
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />
-    <Variable Name="InstallFolder2" Type="string" Value="[WindowsVolume]Database" />
 
     <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />
