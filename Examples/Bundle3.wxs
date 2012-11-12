@@ -23,7 +23,10 @@
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />
     <Variable Name="InstallFolder2" Type="string" Value="[WindowsVolume]Database" />
 
+    <Variable Name="RadioButton1" Type="numeric" Value="0" />
     <Variable Name="RadioButton2" Type="numeric" Value="1" />
+    <Variable Name="RadioButton3" Type="numeric" Value="0" />
+    <Variable Name="RadioButton4" Type="numeric" Value="0" />
 
     <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />

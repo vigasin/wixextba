@@ -24,7 +24,13 @@
     <Variable Name="InstallFolder2" Type="string" Value="[WindowsVolume]Database" />
 
     <Variable Name="RadioButton1" Type="numeric" Value="1" />
-
+    <Variable Name="RadioButton2" Type="numeric" Value="0" />
+    <Variable Name="RadioButton3" Type="numeric" Value="0" />
+    <Variable Name="RadioButton4" Type="numeric" Value="0" />
+    
+    <!-- Disable Option 4 -->
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\**NoValue**" Value="**NoValue**" Variable="RadioButton4" />
+    
     <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />
       <MsiPackage

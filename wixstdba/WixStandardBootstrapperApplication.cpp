@@ -1779,7 +1779,15 @@ private: // privates
                             LONGLONG llValue = 0;
                             HRESULT hr = m_pEngine->GetVariableNumeric(pControl->sczName, &llValue);
 
-                            ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+							// If the control value isn't set then disable it.
+							if (!SUCCEEDED(hr))
+							{
+								ThemeControlEnable(m_pTheme, pControl->wId, false);
+							}
+							else
+							{
+	                            ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+							}
                         }
 
                         // Format the text in each of the new page's controls (if they have any text).

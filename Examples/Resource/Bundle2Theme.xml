@@ -38,10 +38,10 @@
     <Button Name="BrowseButton2" X="-11" Y="192" Width="75" Height="23" TabStop="yes" FontId="3">#(loc.OptionsBrowseButton2)</Button>
 
     <Text X="11" Y="221" Width="-11" Height="17" FontId="3">Select option</Text>
-    <Button Name="RadioButton1" X="11" Y="241" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes" HexStyle="0x000009">Option 1</Button>
-    <Button Name="RadioButton2" X="11" Y="261" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes" HexStyle="0x000009">Option 2</Button>
-    <Button Name="RadioButton3" X="11" Y="281" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes" HexStyle="0x000009">Option 3</Button>
-    <Button Name="RadioButton4" X="11" Y="301" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes" HexStyle="0x000009">Option 3</Button>
+    <Button Name="RadioButton1" X="11" Y="241" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="no" HexStyle="0x000009">Option 1</Button>
+    <Button Name="RadioButton2" X="11" Y="261" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="no" HexStyle="0x000009">Option 2</Button>
+    <Button Name="RadioButton3" X="11" Y="281" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="no" HexStyle="0x000009">Option 3</Button>
+    <Button Name="RadioButton4" X="11" Y="301" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="no" HexStyle="0x000009">Option 3</Button>
 
     <Button Name="OptionsOkButton" X="-91" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0">#(loc.OptionsOkButton)</Button>
     <Button Name="OptionsCancelButton" X="-11" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0">#(loc.OptionsCancelButton)</Button>
