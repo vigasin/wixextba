@@ -16,6 +16,8 @@ static const LPCWSTR WIXSTDBA_WINDOW_CLASS = L"WixExtBA";
 static const LPCWSTR WIXSTDBA_VARIABLE_INSTALL_FOLDER = L"InstallFolder";
 static const LPCWSTR WIXSTDBA_VARIABLE_INSTALL_FOLDER2 = L"InstallFolder2";
 static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH = L"LaunchTarget";
+static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_ARGUMENTS = L"LaunchArguments";
+static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_HIDDEN = L"LaunchHidden";
 static const DWORD WIXSTDBA_ACQUIRE_PERCENTAGE = 30;
 
 enum WIXSTDBA_STATE
@@ -415,7 +417,11 @@ public: // IBootstrapperApplication
 
         ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_CACHE_PROGRESS_BAR, dwOverallPercentage);
 
-        m_dwCalculatedCacheProgress = dwOverallPercentage * WIXSTDBA_ACQUIRE_PERCENTAGE / 100;
+        // Restrict progress to 100% to hide burn engine progress bug.
+		m_dwCalculatedCacheProgress = min(dwOverallPercentage, 100) * WIXSTDBA_ACQUIRE_PERCENTAGE / 100;
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnCacheAcquireProgress() - calculated progress: %u%%, displayed progress: %u%%", m_dwCalculatedCacheProgress, m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
+#endif
         ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_CALCULATED_PROGRESS_BAR, m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
 
         SetTaskbarButtonProgress(m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
@@ -501,7 +507,7 @@ public: // IBootstrapperApplication
                             StrAllocFormatted(&sczError, L"0x%x", dwCode);
                         }
                     }
-        
+
                     nResult = ::MessageBoxW(m_hWnd, sczError ? sczError : wzError, m_pTheme->sczCaption, dwUIHint);
                 }
             }
@@ -592,6 +598,9 @@ public: // IBootstrapperApplication
         ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR, dwOverallProgressPercentage);
 
         m_dwCalculatedExecuteProgress = dwOverallProgressPercentage * (100 - WIXSTDBA_ACQUIRE_PERCENTAGE) / 100;
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnExecuteProgress() - calculated progress: %u%%, displayed progress: %u%%", m_dwCalculatedExecuteProgress, m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
+#endif
         ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_CALCULATED_PROGRESS_BAR, m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
 
         SetTaskbarButtonProgress(m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
@@ -1760,8 +1769,8 @@ private: // privates
 
                         // If we are on the install or options page and this is a named checkbox control, try to set its default
                         // state to the state of a matching named Burn variable.
-                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) && 
-                            THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName && 
+                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) &&
+                            THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName &&
 							WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
                         {
                             LONGLONG llValue = 0;
@@ -1772,8 +1781,8 @@ private: // privates
 
                         // If we are on the install or options pages and this is a named button control with the BS_AUTORADIOBUTTON style, try to set its default
                         // state to the state of a matching named Burn variable.
-                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) && 
-                            THEME_CONTROL_TYPE_BUTTON == pControl->type && 
+                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) &&
+                            THEME_CONTROL_TYPE_BUTTON == pControl->type &&
                             (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && pControl->sczName && *pControl->sczName)
                         {
                             LONGLONG llValue = 0;
@@ -1946,7 +1955,7 @@ private: // privates
                 // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable with that name to true or false.
                 THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
                 if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
-                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && 
+                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
                     pControl->sczName && *pControl->sczName))
                 {
                     BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
@@ -2060,6 +2069,9 @@ private: // privates
         HRESULT hr = S_OK;
         LPWSTR sczUnformattedLaunchTarget = NULL;
         LPWSTR sczLaunchTarget = NULL;
+        LPWSTR sczUnformattedArguments = NULL;
+        LPWSTR sczArguments = NULL;
+        int nCmdShow = SW_SHOWNORMAL;
 
         hr = BalGetStringVariable(WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH, &sczUnformattedLaunchTarget);
         BalExitOnFailure1(hr, "Failed to get launch target variable '%ls'.", WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH);
@@ -2067,7 +2079,21 @@ private: // privates
         hr = BalFormatString(sczUnformattedLaunchTarget, &sczLaunchTarget);
         BalExitOnFailure1(hr, "Failed to format launch target variable: %ls", sczUnformattedLaunchTarget);
 
-        hr = ShelExec(sczLaunchTarget, NULL, L"open", NULL, SW_SHOWDEFAULT, m_hWnd, NULL);
+        if (BalStringVariableExists(WIXSTDBA_VARIABLE_LAUNCH_ARGUMENTS))
+        {
+            hr = BalGetStringVariable(WIXSTDBA_VARIABLE_LAUNCH_ARGUMENTS, &sczUnformattedArguments);
+            BalExitOnFailure1(hr, "Failed to get launch arguments '%ls'.", WIXSTDBA_VARIABLE_LAUNCH_ARGUMENTS);
+
+            hr = BalFormatString(sczUnformattedArguments, &sczArguments);
+            BalExitOnFailure1(hr, "Failed to format launch arguments variable: %ls", sczUnformattedArguments);
+        }
+
+        if (BalStringVariableExists(WIXSTDBA_VARIABLE_LAUNCH_HIDDEN))
+        {
+            nCmdShow = SW_HIDE;
+        }
+
+        hr = ShelExec(sczLaunchTarget, sczArguments, L"open", NULL, nCmdShow, m_hWnd, NULL);
         BalExitOnFailure1(hr, "Failed to launch target: %ls", sczLaunchTarget);
 
         ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
@@ -2075,6 +2101,8 @@ private: // privates
     LExit:
         ReleaseStr(sczLaunchTarget);
         ReleaseStr(sczUnformattedLaunchTarget);
+        ReleaseStr(sczArguments);
+        ReleaseStr(sczUnformattedArguments);
 
         return;
     }
@@ -2331,7 +2359,7 @@ private: // privates
             {
                 THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
                 if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
-                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && 
+                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
                     pControl->sczName && *pControl->sczName))
                 {
                     BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
@@ -2340,7 +2368,7 @@ private: // privates
             }
         }
 	}
-	
+
 
 public:
     //
