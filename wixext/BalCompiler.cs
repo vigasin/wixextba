@@ -16,7 +16,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
+    using System.IO;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Xml;
     using System.Xml.Schema;
     using Microsoft.Tools.WindowsInstallerXml;
@@ -32,19 +35,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// <summary>
         /// Instantiate a new BalCompiler.
         /// </summary>
+        [MethodImplAttribute(MethodImplOptions.NoInlining)]
         public BalCompiler()
         {
             // Check calling toolset version, if must match this assemblies major.minor version
-            var assemblyCaller = Assembly.GetCallingAssembly();
-            var fviCaller = FileVersionInfo.GetVersionInfo(assemblyCaller.Location);
+            var assemblyEntry = Assembly.GetEntryAssembly();
+            var fviEntry = FileVersionInfo.GetVersionInfo(assemblyEntry.Location);
+            var versionEntry = new Version(fviEntry.FileMajorPart, fviEntry.FileMinorPart);
 
             var assemblyThis = Assembly.GetExecutingAssembly();
             var fviThis = FileVersionInfo.GetVersionInfo(assemblyThis.Location);
-
             var versionThis = new Version(fviThis.FileMajorPart, fviThis.FileMinorPart);
-            var versionCaller = new Version(fviCaller.FileMajorPart, fviCaller.FileMinorPart);
-
-            if (versionCaller != versionThis)
+            
+            if (versionEntry != versionThis)
             {
                 throw new WixException(WixErrors.InvalidExtension("BalExtension", "Toolset version not supported."));
             }
@@ -220,6 +223,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         private void ParseWixExtendedBootstrapperApplicationElement(XmlNode node)
         {
             SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+#if WIX37
+            string launchTarget = null;
+#endif
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
@@ -228,6 +234,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string localizationFile = null;
             YesNoType suppressOptionsUI = YesNoType.NotSet;
             YesNoType suppressDowngradeFailure = YesNoType.NotSet;
+            YesNoType suppressRepair = YesNoType.NotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -235,6 +242,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     switch (attrib.LocalName)
                     {
+#if WIX37
+                        case "LaunchTarget":
+                            launchTarget = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
+#endif
                         case "LicenseFile":
                             licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
@@ -258,6 +270,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "SuppressDowngradeFailure":
                             suppressDowngradeFailure = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "SuppressRepair":
+                            suppressRepair = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -292,6 +307,13 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
             if (!this.Core.EncounteredError)
             {
+#if WIX37
+                if (!String.IsNullOrEmpty(launchTarget))
+                {
+                    this.Core.CreateVariableRow(sourceLineNumbers, "LaunchTarget", launchTarget, "string", false, false);
+                }
+#endif
+
                 if (!String.IsNullOrEmpty(licenseFile))
                 {
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaLicenseRtf", licenseFile, false);
@@ -322,7 +344,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaThemeWxl", localizationFile, false);
                 }
 
-                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure)
+                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair)
                 {
                     Row row = this.Core.CreateRow(sourceLineNumbers, "WixExtbaOptions");
                     if (YesNoType.Yes == suppressOptionsUI)
@@ -334,7 +356,12 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     {
                         row[1] = 1;
                     }
-				}
+
+                    if (YesNoType.Yes == suppressRepair)
+                    {
+                        row[2] = 1;
+                    }
+                }
             }
         }
     }
