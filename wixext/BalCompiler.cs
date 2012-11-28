@@ -39,6 +39,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         public BalCompiler()
         {
             // Check calling toolset version, if must match this assemblies major.minor version
+            /*
             var assemblyEntry = Assembly.GetEntryAssembly();
             var fviEntry = FileVersionInfo.GetVersionInfo(assemblyEntry.Location);
             var versionEntry = new Version(fviEntry.FileMajorPart, fviEntry.FileMinorPart);
@@ -49,8 +50,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             
             if (versionEntry != versionThis)
             {
-                throw new WixException(WixErrors.InvalidExtension("BalExtension", "Toolset version not supported."));
+                throw new WixException(WixErrors.InvalidExtension("BalExtensionExt", "Toolset version " + versionEntry.ToString() + " not supported."));
             }
+            */
 
             this.addedConditionLineNumber = null;
             this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.bal.xsd");
