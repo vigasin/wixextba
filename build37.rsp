@@ -1,6 +1,0 @@
-/p:WiX="D:\WiX\WiX3.7\\"
-/p:WixToolPath="D:\WiX\WiX3.7\\"
-/p:WixTargetsPath="D:\WiX\WiX3.7\Wix.targets"
-/p:WixTasksPath="D:\WiX\WiX3.7\wixtasks.dll"
-/p:ExtraDefinitions=WIX37
-
