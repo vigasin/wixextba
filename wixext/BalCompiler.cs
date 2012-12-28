@@ -19,7 +19,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Globalization;
     using System.IO;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Xml;
     using System.Xml.Schema;
     using Microsoft.Tools.WindowsInstallerXml;
@@ -35,25 +34,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// <summary>
         /// Instantiate a new BalCompiler.
         /// </summary>
-        [MethodImplAttribute(MethodImplOptions.NoInlining)]
         public BalCompiler()
         {
-            // Check calling toolset version, if must match this assemblies major.minor version
-            /*
-            var assemblyEntry = Assembly.GetEntryAssembly();
-            var fviEntry = FileVersionInfo.GetVersionInfo(assemblyEntry.Location);
-            var versionEntry = new Version(fviEntry.FileMajorPart, fviEntry.FileMinorPart);
-
-            var assemblyThis = Assembly.GetExecutingAssembly();
-            var fviThis = FileVersionInfo.GetVersionInfo(assemblyThis.Location);
-            var versionThis = new Version(fviThis.FileMajorPart, fviThis.FileMinorPart);
-            
-            if (versionEntry != versionThis)
-            {
-                throw new WixException(WixErrors.InvalidExtension("BalExtensionExt", "Toolset version " + versionEntry.ToString() + " not supported."));
-            }
-            */
-
             this.addedConditionLineNumber = null;
             this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.bal.xsd");
         }
@@ -225,9 +207,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         private void ParseWixExtendedBootstrapperApplicationElement(XmlNode node)
         {
             SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
-#if WIX37
             string launchTarget = null;
-#endif
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
@@ -244,11 +224,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     switch (attrib.LocalName)
                     {
-#if WIX37
                         case "LaunchTarget":
                             launchTarget = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
-#endif
                         case "LicenseFile":
                             licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
@@ -309,12 +287,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
             if (!this.Core.EncounteredError)
             {
-#if WIX37
                 if (!String.IsNullOrEmpty(launchTarget))
                 {
                     this.Core.CreateVariableRow(sourceLineNumbers, "LaunchTarget", launchTarget, "string", false, false);
                 }
-#endif
 
                 if (!String.IsNullOrEmpty(licenseFile))
                 {

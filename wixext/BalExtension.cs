@@ -13,6 +13,7 @@
 
 namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 {
+    using System;
     using System.Reflection;
 
     /// <summary>

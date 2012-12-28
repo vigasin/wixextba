@@ -251,9 +251,7 @@ public: // IBootstrapperApplication
 
     virtual STDMETHODIMP_(int) OnDetectRelatedBundle(
         __in LPCWSTR /*wzBundleId*/,
-#ifdef WIX37
         __in BOOTSTRAPPER_RELATION_TYPE /*relationType*/,
-#endif
         __in LPCWSTR /*wzBundleTag*/,
         __in BOOL /*fPerMachine*/,
         __in DWORD64 /*dw64Version*/,
@@ -423,7 +421,7 @@ public: // IBootstrapperApplication
         ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_CACHE_PROGRESS_BAR, dwOverallPercentage);
 
         // Restrict progress to 100% to hide burn engine progress bug.
-		m_dwCalculatedCacheProgress = min(dwOverallPercentage, 100) * WIXSTDBA_ACQUIRE_PERCENTAGE / 100;
+        m_dwCalculatedCacheProgress = min(dwOverallPercentage, 100) * WIXSTDBA_ACQUIRE_PERCENTAGE / 100;
 #ifdef DEBUG
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnCacheAcquireProgress() - calculated progress: %u%%, displayed progress: %u%%", m_dwCalculatedCacheProgress, m_dwCalculatedCacheProgress + m_dwCalculatedExecuteProgress);
 #endif
@@ -534,7 +532,6 @@ public: // IBootstrapperApplication
         __in DWORD dwOverallProgressPercentage
         )
     {
-#ifdef WIX37
         WCHAR wzProgress[5] = { };
 
 #ifdef DEBUG
@@ -548,32 +545,6 @@ public: // IBootstrapperApplication
         SetTaskbarButtonProgress(dwOverallProgressPercentage);
 
         return __super::OnProgress(dwProgressPercentage, dwOverallProgressPercentage);
-#else
-        HRESULT hr = S_OK;
-        WCHAR wzProgress[5] = { };
-        int nResult = IDNOACTION;
-
-#ifdef DEBUG
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnProgress() - progress: %u%%, overall progress: %u%%", dwProgressPercentage, dwOverallProgressPercentage);
-#endif
-
-        if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_command.display)
-        {
-            hr = m_pEngine->SendEmbeddedProgress(dwProgressPercentage, dwOverallProgressPercentage, &nResult);
-            BalExitOnFailure(hr, "Failed to send embedded progress.");
-        }
-        else
-        {
-            ::StringCchPrintfW(wzProgress, countof(wzProgress), L"%u%%", dwOverallProgressPercentage);
-            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_TEXT, wzProgress);
-
-            ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR, dwOverallProgressPercentage);
-            SetTaskbarButtonProgress(dwOverallProgressPercentage);
-        }
-
-    LExit:
-        return FAILED(hr) ? IDERROR : CheckCanceled() ? IDCANCEL : nResult;
-#endif
     }
 
 
@@ -1711,15 +1682,14 @@ private: // privates
                 // Enable disable controls per-page.
                 if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId) // on the "Install" page, ensure the install button is enabled/disabled correctly.
                 {
-#ifdef WIX37
                     LONGLONG llElevated = 0;
                     if (m_Bundle.fPerMachine)
                     {
                         BalGetNumericVariable(WIXBUNDLE_VARIABLE_ELEVATED, &llElevated);
                     }
-			        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnChangeState() - doing elevation button");
+                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnChangeState() - doing elevation button");
                     ThemeControlElevates(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON, (m_Bundle.fPerMachine && !llElevated));
-#endif
+
                     // If the EULA control exists, show it only if a license URL is provided as well.
                     if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_EULA_LINK))
                     {
@@ -1828,14 +1798,10 @@ private: // privates
                         // state to the state of a matching named Burn variable.
                         if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) &&
                             THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName &&
-							WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
+                            WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
                         {
                             LONGLONG llValue = 0;
-#ifdef WIX37
                             HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
-#else
-                            HRESULT hr = m_pEngine->GetVariableNumeric(pControl->sczName, &llValue);
-#endif
 
                             ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
                         }
@@ -1847,21 +1813,17 @@ private: // privates
                             (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && pControl->sczName && *pControl->sczName)
                         {
                             LONGLONG llValue = 0;
-#ifdef WIX37
                             HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
-#else
-                            HRESULT hr = m_pEngine->GetVariableNumeric(pControl->sczName, &llValue);
-#endif
 
-							// If the control value isn't set then disable it.
-							if (!SUCCEEDED(hr))
-							{
-								ThemeControlEnable(m_pTheme, pControl->wId, false);
-							}
-							else
-							{
-	                            ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
-							}
+                            // If the control value isn't set then disable it.
+                            if (!SUCCEEDED(hr))
+                            {
+                                ThemeControlEnable(m_pTheme, pControl->wId, false);
+                            }
+                            else
+                            {
+                                ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                            }
                         }
 
                         // Format the text in each of the new page's controls (if they have any text).
@@ -1934,7 +1896,7 @@ private: // privates
     //
     void OnClickOptionsButton()
     {
-		SaveInstallPage();
+        SaveInstallPage();
         m_stateBeforeOptions = m_state;
         SetState(WIXSTDBA_STATE_OPTIONS, S_OK);
     }
@@ -2057,9 +2019,9 @@ private: // privates
     //
     void OnClickInstallButton()
     {
-		SaveInstallPage();
+        SaveInstallPage();
 
-		this->OnPlan(BOOTSTRAPPER_ACTION_INSTALL);
+        this->OnPlan(BOOTSTRAPPER_ACTION_INSTALL);
     }
 
 
@@ -2411,7 +2373,7 @@ private: // privates
 
 
     void SaveInstallPage()
-	{
+    {
         THEME_PAGE* pPage = NULL;
 
         // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable
@@ -2431,7 +2393,7 @@ private: // privates
                 }
             }
         }
-	}
+    }
 
 
 public:
@@ -2456,11 +2418,7 @@ public:
         else // maybe modify the action state if the bundle is or is not already installed.
         {
             LONGLONG llInstalled = 0;
-#ifdef WIX37
             HRESULT hr = BalGetNumericVariable(L"WixBundleInstalled", &llInstalled);
-#else
-            HRESULT hr = pEngine->GetVariableNumeric(L"WixBundleInstalled", &llInstalled);
-#endif
             if (SUCCEEDED(hr) && BOOTSTRAPPER_RESUME_TYPE_REBOOT != m_command.resumeType && 0 < llInstalled && BOOTSTRAPPER_ACTION_INSTALL == m_command.action)
             {
                 m_command.action = BOOTSTRAPPER_ACTION_MODIFY;
