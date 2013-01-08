@@ -20,6 +20,7 @@
   <String Id="InstallOptionsButton">&amp;Options</String>
   <String Id="InstallInstallButton">&amp;Install</String>
   <String Id="InstallCloseButton">&amp;Close</String>
+  <String Id="InstallUpgradeLinkText">Version [WixBundleVersion] &lt;a href="#"&gt;upgrade available&lt;/a&gt;</String>
   <String Id="OptionsHeader">Setup Options</String>
   <String Id="OptionsLocationLabel">Install location:</String>
   <String Id="OptionsBrowseButton">&amp;Browse...</String>

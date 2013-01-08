@@ -94,6 +94,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EULA_LINK,
     WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX,
     WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON,
+    WIXSTDBA_CONTROL_UPGRADE_LINK,
 
     // Options page
     WIXSTDBA_CONTROL_FOLDER_EDITBOX,
@@ -150,6 +151,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EULA_LINK, L"EulaHyperlink" },
     { WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX, L"EulaAcceptCheckbox" },
     { WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON, L"WelcomeCancelButton" },
+    { WIXSTDBA_CONTROL_UPGRADE_LINK, L"UpgradeHyperlink" },
 
     { WIXSTDBA_CONTROL_FOLDER_EDITBOX, L"FolderEditbox" },
     { WIXSTDBA_CONTROL_BROWSE_BUTTON, L"BrowseButton" },
@@ -280,6 +282,67 @@ public: // IBootstrapperApplication
         {
             m_fPrereqAlreadyInstalled = TRUE;
         }
+    }
+
+
+    // OnDetectUpdateBegin - called when the engine begins detection for bundle update.
+    virtual STDMETHODIMP_(int) OnDetectUpdateBegin(
+        __in_z LPCWSTR wzUpdateLocation,
+        __in int nRecommendation
+        )
+    {
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update location: %ls.", wzUpdateLocation);
+
+        //
+        // Load the update XML from a location url and parse it for an update.
+        //
+        // <?xml version="1.0" encoding="utf-8"?>
+        // <Setup>
+        //   <Upgrade Url="https://somewhere.co.uk/download/Setup.exe" Size="123" />
+        // </Setup>
+
+        HRESULT hr = S_OK;
+        IXMLDOMDocument *pixd = NULL;
+        IXMLDOMNode* pNode = NULL;
+        LPWSTR sczUpdateUrl = NULL;
+        DWORD64 qwSize = 0;
+
+        m_fUpdate = FALSE;
+
+        hr = XmlLoadDocumentFromFile(wzUpdateLocation, &pixd);
+        BalExitOnFailure(hr, "Failed to load version check XML document.");
+
+        hr = XmlSelectSingleNode(pixd, L"/Setup/Upgrade", &pNode);
+        BalExitOnFailure(hr, "Failed to select upgrade node.");
+
+        hr = XmlGetAttributeEx(pNode, L"Url", &sczUpdateUrl);
+        BalExitOnFailure(hr, "Failed to get url attribute.");
+
+        hr = XmlGetAttributeLargeNumber(pNode, L"Size", &qwSize);
+
+        m_fUpdate = (sczUpdateUrl && *sczUpdateUrl);
+
+        if (m_fUpdate)
+        {
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
+            m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
+        }
+        else
+        {
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "No update available.");
+        }
+
+        if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
+        {
+            ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, m_fUpdate);
+        }
+    
+LExit:
+        ReleaseObject(pixd);
+        ReleaseStr(sczUpdateUrl);
+        ReleaseObject(pNode);
+
+        return nRecommendation;
     }
 
 
@@ -714,6 +777,12 @@ public: // IBootstrapperApplication
 
         SetState(WIXSTDBA_STATE_APPLIED, hrStatus);
         SetTaskbarButtonProgress(100); // show full progress bar, green, yellow, or red
+
+        // If we successfully applied an update close the window since the new Bundle should be running now.
+        if (SUCCEEDED(hrStatus) && m_fUpdate)
+        {
+            ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
+        }
 
         return IDNOACTION;
     }
@@ -1428,6 +1497,9 @@ private: // privates
                     case WIXSTDBA_CONTROL_FAILURE_LOGFILE_LINK:
                         pBA->OnClickLogFileLink();
                         return 1;
+                    case WIXSTDBA_CONTROL_UPGRADE_LINK:
+                        pBA->OnClickUpgradeLink();
+                        return 1;
                     }
                 }
             }
@@ -1522,6 +1594,12 @@ private: // privates
                 BalLog(BOOTSTRAPPER_LOG_LEVEL_ERROR, "Failed to load file into license richedit control from path '%ls' manifest value: %ls", sczLicensePath, m_sczLicenseFile);
                 hr = S_OK;
             }
+        }
+
+        // Disable the upgrade link by default
+        if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
+        {
+            ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, FALSE);
         }
 
     LExit:
@@ -1687,7 +1765,6 @@ private: // privates
                     {
                         BalGetNumericVariable(WIXBUNDLE_VARIABLE_ELEVATED, &llElevated);
                     }
-                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnChangeState() - doing elevation button");
                     ThemeControlElevates(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON, (m_Bundle.fPerMachine && !llElevated));
 
                     // If the EULA control exists, show it only if a license URL is provided as well.
@@ -2088,6 +2165,16 @@ private: // privates
 
 
     //
+    // OnClickUpgradeLink - download the upgrade.
+    //
+    void OnClickUpgradeLink()
+    {
+        this->OnPlan(BOOTSTRAPPER_ACTION_UPDATE_REPLACE);
+        return;
+    }
+
+
+    //
     // OnClickLaunchButton - launch the app from the success page.
     //
     void OnClickLaunchButton()
@@ -2483,6 +2570,8 @@ public:
         m_fPrereqInstalled = FALSE;
         m_fPrereqAlreadyInstalled = FALSE;
 
+        m_fUpdate = FALSE;
+
         pEngine->AddRef();
         m_pEngine = pEngine;
     }
@@ -2562,6 +2651,8 @@ private:
     UINT m_uTaskbarButtonCreatedMessage;
     BOOL m_fTaskbarButtonOK;
     BOOL m_fShowingInternalUiThisPackage;
+
+    BOOL m_fUpdate;
 };
 
 
