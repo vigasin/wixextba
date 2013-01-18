@@ -293,13 +293,23 @@ public: // IBootstrapperApplication
     {
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update location: %ls.", wzUpdateLocation);
 
-        //
-        // Load the update XML from a location url and parse it for an update.
-        //
-        // <?xml version="1.0" encoding="utf-8"?>
-        // <Setup>
-        //   <Upgrade Url="https://somewhere.co.uk/download/Setup.exe" Size="123" />
-        // </Setup>
+        m_wzUpdateLocation = wzUpdateLocation;
+        // If there is an upgrade link, check for update on a background thread 
+        if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
+        {
+            ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, FALSE);
+            ::CreateThread(NULL, 0, ThreadProc, this, 0, NULL);
+        }
+
+        return nRecommendation;
+    }
+
+    
+    static DWORD WINAPI ThreadProc(
+        __in LPVOID pvContext
+        )
+    {
+        CWixStandardBootstrapperApplication* pThis = static_cast<CWixStandardBootstrapperApplication*>(pvContext);;
 
         HRESULT hr = S_OK;
         IXMLDOMDocument *pixd = NULL;
@@ -307,9 +317,18 @@ public: // IBootstrapperApplication
         LPWSTR sczUpdateUrl = NULL;
         DWORD64 qwSize = 0;
 
-        m_fUpdate = FALSE;
+        pThis->m_fUpdate = FALSE;
+        
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Checking for update.");
 
-        hr = XmlLoadDocumentFromFile(wzUpdateLocation, &pixd);
+        // Load the update XML from a location url and parse it for an update.
+        //
+        // <?xml version="1.0" encoding="utf-8"?>
+        // <Setup>
+        //   <Upgrade Url="https://somewhere.co.uk/download/Setup.exe" Size="123" />
+        // </Setup>
+
+        hr = XmlLoadDocumentFromFile(pThis->m_wzUpdateLocation, &pixd);
         BalExitOnFailure(hr, "Failed to load version check XML document.");
 
         hr = XmlSelectSingleNode(pixd, L"/Setup/Upgrade", &pNode);
@@ -320,29 +339,25 @@ public: // IBootstrapperApplication
 
         hr = XmlGetAttributeLargeNumber(pNode, L"Size", &qwSize);
 
-        m_fUpdate = (sczUpdateUrl && *sczUpdateUrl);
+        pThis->m_fUpdate = (sczUpdateUrl && *sczUpdateUrl);
 
-        if (m_fUpdate)
+        if (pThis->m_fUpdate)
         {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
-            m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update available, url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
+            pThis->m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
+            ThemeControlEnable(pThis->m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, TRUE);
         }
         else
         {
             BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "No update available.");
         }
-
-        if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
-        {
-            ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, m_fUpdate);
-        }
     
 LExit:
         ReleaseObject(pixd);
-        ReleaseStr(sczUpdateUrl);
         ReleaseObject(pNode);
+        ReleaseStr(sczUpdateUrl);
 
-        return nRecommendation;
+        return 0;
     }
 
 
@@ -1871,35 +1886,37 @@ private: // privates
                     {
                         THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
 
-                        // If we are on the install or options page and this is a named checkbox control, try to set its default
-                        // state to the state of a matching named Burn variable.
-                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) &&
-                            THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName &&
-                            WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
+                        // If we are on the install, options or modify pages and this is a named control, try to set its default state.
+                        if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || 
+                             m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId || 
+                             m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId && 
+                             pControl->sczName && *pControl->sczName)
                         {
-                            LONGLONG llValue = 0;
-                            HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
-
-                            ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
-                        }
-
-                        // If we are on the install or options pages and this is a named button control with the BS_AUTORADIOBUTTON style, try to set its default
-                        // state to the state of a matching named Burn variable.
-                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId) &&
-                            THEME_CONTROL_TYPE_BUTTON == pControl->type &&
-                            (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) && pControl->sczName && *pControl->sczName)
-                        {
-                            LONGLONG llValue = 0;
-                            HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
-
-                            // If the control value isn't set then disable it.
-                            if (!SUCCEEDED(hr))
+                            // If this is a checkbox control, try to set its default state to the state of a matching named Burn variable.
+                            if (THEME_CONTROL_TYPE_CHECKBOX == pControl->type && WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
                             {
-                                ThemeControlEnable(m_pTheme, pControl->wId, false);
-                            }
-                            else
-                            {
+                                LONGLONG llValue = 0;
+                                HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
+    
                                 ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                            }
+    
+                                // If this is a button control with the BS_AUTORADIOBUTTON style, try to set its default
+                            // state to the state of a matching named Burn variable.
+                                if (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)))
+                            {
+                                LONGLONG llValue = 0;
+                                HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
+    
+                                // If the control value isn't set then disable it.
+                                if (!SUCCEEDED(hr))
+                                {
+                                    ThemeControlEnable(m_pTheme, pControl->wId, false);
+                                }
+                                else
+                                {
+                                    ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                                }
                             }
                         }
 
@@ -1973,7 +1990,7 @@ private: // privates
     //
     void OnClickOptionsButton()
     {
-        SaveInstallPage();
+        SavePageSettings(WIXSTDBA_PAGE_INSTALL);
         m_stateBeforeOptions = m_state;
         SetState(WIXSTDBA_STATE_OPTIONS, S_OK);
     }
@@ -2026,7 +2043,6 @@ private: // privates
     {
         HRESULT hr = S_OK;
         LPWSTR sczPath = NULL;
-        THEME_PAGE* pPage = NULL;
 
         if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_FOLDER_EDITBOX))
         {
@@ -2050,31 +2066,7 @@ private: // privates
             ExitOnFailure(hr, "Failed to set the install folder2.");
         }
 
-        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS]);
-        if (pPage)
-        {
-            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
-            {
-                // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable with that name to true or false.
-                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
-                if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
-                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
-                    pControl->sczName && *pControl->sczName))
-                {
-                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
-                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
-                }
-
-                // Loop through all the editbox controls with names and set a Burn variable with that name to the contents.
-                if (THEME_CONTROL_TYPE_EDITBOX == pControl->type && pControl->sczName && *pControl->sczName &&
-                    (WIXSTDBA_CONTROL_FOLDER_EDITBOX != pControl->wId && WIXSTDBA_CONTROL_FOLDER_EDITBOX2 != pControl->wId))
-                {
-                    LPWSTR sczValue = NULL;
-                    ThemeGetTextControl(m_pTheme, pControl->wId, &sczValue);
-                    m_pEngine->SetVariableString(pControl->sczName, sczValue);
-                }
-            }
-        }
+        SavePageSettings(WIXSTDBA_PAGE_OPTIONS);
 
     LExit:
         SetState(m_stateBeforeOptions, S_OK);
@@ -2096,7 +2088,7 @@ private: // privates
     //
     void OnClickInstallButton()
     {
-        SaveInstallPage();
+        SavePageSettings(WIXSTDBA_PAGE_INSTALL);
 
         this->OnPlan(BOOTSTRAPPER_ACTION_INSTALL);
     }
@@ -2459,17 +2451,16 @@ private: // privates
     }
 
 
-    void SaveInstallPage()
+    void SavePageSettings(WIXSTDBA_PAGE page)
     {
         THEME_PAGE* pPage = NULL;
 
-        // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable
-        // with that name to true or false.
-        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL]);
+        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[page]);
         if (pPage)
         {
             for (DWORD i = 0; i < pPage->cControlIndices; ++i)
             {
+                // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable with that name to true or false.
                 THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
                 if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
                     (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
@@ -2477,6 +2468,15 @@ private: // privates
                 {
                     BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
                     m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
+                }
+
+                // Loop through all the editbox controls with names and set a Burn variable with that name to the contents.
+                if (THEME_CONTROL_TYPE_EDITBOX == pControl->type && pControl->sczName && *pControl->sczName &&
+                    (WIXSTDBA_CONTROL_FOLDER_EDITBOX != pControl->wId && WIXSTDBA_CONTROL_FOLDER_EDITBOX2 != pControl->wId))
+                {
+                    LPWSTR sczValue = NULL;
+                    ThemeGetTextControl(m_pTheme, pControl->wId, &sczValue);
+                    m_pEngine->SetVariableString(pControl->sczName, sczValue);
                 }
             }
         }
@@ -2653,6 +2653,7 @@ private:
     BOOL m_fShowingInternalUiThisPackage;
 
     BOOL m_fUpdate;
+    LPCWSTR m_wzUpdateLocation;
 };
 
 
