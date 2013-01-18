@@ -13,7 +13,7 @@
     Manufacturer="ACME"
     AboutUrl="http://wixtoolset.org">
 
-    <Update Location="https://extranet.paxton-access.co.uk/download%20files/Net2/Upgrade.asp?version=4.27.0.0"/>
+    <Update Location="http://wixtoolset.org/releases/feed/v3.7"/>
 
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
       <Payload SourceFile="Resource\License.htm" />
