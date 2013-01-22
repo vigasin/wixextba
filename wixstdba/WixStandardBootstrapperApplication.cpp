@@ -305,62 +305,6 @@ public: // IBootstrapperApplication
     }
 
     
-    static DWORD WINAPI ThreadProc(
-        __in LPVOID pvContext
-        )
-    {
-        CWixStandardBootstrapperApplication* pThis = static_cast<CWixStandardBootstrapperApplication*>(pvContext);;
-
-        HRESULT hr = S_OK;
-        IXMLDOMDocument *pixd = NULL;
-        IXMLDOMNode* pNode = NULL;
-        LPWSTR sczUpdateUrl = NULL;
-        DWORD64 qwSize = 0;
-
-        pThis->m_fUpdate = FALSE;
-        
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Checking for update.");
-
-        // Load the update XML from a location url and parse it for an update.
-        //
-        // <?xml version="1.0" encoding="utf-8"?>
-        // <Setup>
-        //   <Upgrade Url="https://somewhere.co.uk/download/Setup.exe" Size="123" />
-        // </Setup>
-
-        hr = XmlLoadDocumentFromFile(pThis->m_wzUpdateLocation, &pixd);
-        BalExitOnFailure(hr, "Failed to load version check XML document.");
-
-        hr = XmlSelectSingleNode(pixd, L"/Setup/Upgrade", &pNode);
-        BalExitOnFailure(hr, "Failed to select upgrade node.");
-
-        hr = XmlGetAttributeEx(pNode, L"Url", &sczUpdateUrl);
-        BalExitOnFailure(hr, "Failed to get url attribute.");
-
-        hr = XmlGetAttributeLargeNumber(pNode, L"Size", &qwSize);
-
-        pThis->m_fUpdate = (sczUpdateUrl && *sczUpdateUrl);
-
-        if (pThis->m_fUpdate)
-        {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update available, url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
-            pThis->m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
-            ThemeControlEnable(pThis->m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, TRUE);
-        }
-        else
-        {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "No update available.");
-        }
-    
-LExit:
-        ReleaseObject(pixd);
-        ReleaseObject(pNode);
-        ReleaseStr(sczUpdateUrl);
-
-        return 0;
-    }
-
-
     virtual STDMETHODIMP_(void) OnDetectComplete(
         __in HRESULT hrStatus
         )
@@ -889,6 +833,65 @@ private: // privates
         }
 
         return hr;
+    }
+
+
+    static DWORD WINAPI ThreadProc(
+        __in LPVOID pvContext
+        )
+    {
+        CWixStandardBootstrapperApplication* pThis = static_cast<CWixStandardBootstrapperApplication*>(pvContext);;
+
+        HRESULT hr = S_OK;
+        IXMLDOMDocument *pixd = NULL;
+        IXMLDOMNode* pNode = NULL;
+        LPWSTR sczUpdateUrl = NULL;
+        DWORD64 qwSize = 0;
+
+        pThis->m_fUpdate = FALSE;
+        
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Checking for update.");
+
+        // Load the update XML from a location url and parse it for an update.
+        //
+        // <?xml version="1.0" encoding="utf-8"?>
+        // <Setup>
+        //   <Upgrade Url="https://somewhere.co.uk/download/Setup.exe" Size="123" />
+        // </Setup>
+
+        hr = XmlLoadDocumentFromFile(pThis->m_wzUpdateLocation, &pixd);
+        BalExitOnFailure(hr, "Failed to load version check XML document.");
+
+        hr = XmlSelectSingleNode(pixd, L"/Setup/Upgrade", &pNode);
+        BalExitOnFailure(hr, "Failed to select upgrade node.");
+        
+        if (S_OK == hr)
+        {
+            hr = XmlGetAttributeEx(pNode, L"Url", &sczUpdateUrl);
+            BalExitOnFailure(hr, "Failed to get url attribute.");
+
+            hr = XmlGetAttributeLargeNumber(pNode, L"Size", &qwSize);
+
+            pThis->m_fUpdate = (sczUpdateUrl && *sczUpdateUrl);
+        }
+
+        if (pThis->m_fUpdate)
+        {
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update available, url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
+            pThis->m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
+            ThemeControlEnable(pThis->m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, TRUE);
+        }
+        else
+        {
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "No update available.");
+        }
+    
+LExit:
+        ReleaseObject(pixd);
+        ReleaseObject(pNode);
+        ReleaseStr(sczUpdateUrl);
+
+        return 0;
     }
 
 
@@ -1887,9 +1890,9 @@ private: // privates
                         THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
 
                         // If we are on the install, options or modify pages and this is a named control, try to set its default state.
-                        if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || 
+                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || 
                              m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId || 
-                             m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId && 
+                             m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId) && 
                              pControl->sczName && *pControl->sczName)
                         {
                             // If this is a checkbox control, try to set its default state to the state of a matching named Burn variable.
@@ -1901,9 +1904,9 @@ private: // privates
                                 ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
                             }
     
-                                // If this is a button control with the BS_AUTORADIOBUTTON style, try to set its default
+                            // If this is a button control with the BS_AUTORADIOBUTTON style, try to set its default
                             // state to the state of a matching named Burn variable.
-                                if (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)))
+                            if (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)))
                             {
                                 LONGLONG llValue = 0;
                                 HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
