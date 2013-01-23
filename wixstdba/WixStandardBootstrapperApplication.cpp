@@ -1747,6 +1747,8 @@ LExit:
         DWORD dwNewPageId = 0;
         LPWSTR sczText = NULL;
         LPWSTR sczUnformattedText = NULL;
+        LPWSTR sczControlState = NULL;
+        LPWSTR sczControlName = NULL;
 
         m_state = state;
 
@@ -1921,6 +1923,25 @@ LExit:
                                     ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
                                 }
                             }
+
+                            // Hide or disable controls based on the control name with 'State' appended
+                            StrAllocFormatted(&sczControlName, L"%lsState", pControl->sczName);
+                            HRESULT hr = BalGetStringVariable(sczControlName, &sczControlState);
+                            if (SUCCEEDED(hr) && sczControlState && *sczControlState)
+                            {
+                                if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"disable", -1))
+                                {
+                                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Disable control %ls", pControl->sczName);
+                                    ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
+                                }
+
+                                if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"hide", -1))
+                                {
+                                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Hide control %ls", pControl->sczName);
+                                    // TODO: This doesn't work
+                                    ThemeShowControl(m_pTheme, pControl->wId, SW_HIDE);
+                                }
+                            }
                         }
 
                         // Format the text in each of the new page's controls (if they have any text).
@@ -1942,6 +1963,8 @@ LExit:
 
         ReleaseStr(sczText);
         ReleaseStr(sczUnformattedText);
+        ReleaseStr(sczControlState);
+        ReleaseStr(sczControlName);
     }
 
 
