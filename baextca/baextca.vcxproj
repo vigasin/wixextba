@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-  <copyright file="wixstdba.vcxproj" company="X2 Systems Limited">
+  <copyright file="baextca.vcxproj" company="X2 Systems Limited">
     Copyright (c) 2013, X2 Systems Limited.
     This software is released under Microsoft Reciprocal License (MS-RL).
     The license and further copyright text can be found in the file
@@ -19,12 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{41085a22-e6aa-4e8b-ab1b-ddee0dc89dfa}</ProjectGuid>
-    <RootNamespace>WixStdBA</RootNamespace>
+    <ProjectGuid>{EB0A7D51-2133-4EE7-B6CA-87DBEAC67E02}</ProjectGuid>
+    <RootNamespace>BaExtCA</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <ProjectName>wixextba</ProjectName>
+    <ProjectName>baextca</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -52,7 +52,8 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
   </PropertyGroup>
   <PropertyGroup>
-    <ExtraDefinitions></ExtraDefinitions>
+    <ExtraDefinitions>
+    </ExtraDefinitions>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -76,7 +77,7 @@
     <Link>
       <AdditionalDependencies>dutil.lib;balutil.lib;comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WiX)SDK\VS2010\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>wixstdba.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>baextca.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -103,31 +104,23 @@
     <Link>
       <AdditionalDependencies>dutil.lib;balutil.lib;comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WiX)SDK\VS2010\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>wixstdba.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>baextca.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="WixStandardBootstrapperApplication.cpp" />
-    <ClCompile Include="wixstdba.cpp">
+    <ClCompile Include="WixBootstrapperCustomAction.cpp" />
+    <ClCompile Include="baextca.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\logo.png" />
-    <None Include="Resources\LoremIpsumLicense.rtf" />
-    <None Include="Resources\HyperlinkTheme.wxl" />
-    <None Include="Resources\HyperlinkTheme.xml" />
-    <None Include="Resources\RtfTheme.wxl" />
-    <None Include="Resources\RtfTheme.xml">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="wixstdba.def" />
+    <None Include="baextca.def" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="wixstdba.rc" />
+    <ResourceCompile Include="baextca.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="precomp.h" />

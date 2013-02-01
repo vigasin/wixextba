@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <!--
   This example demonstrates the HyperlinkLicense UI built in to WixBalExtensionExt.
+  
+  It also shows how to use the custom action extension.
 -->
 <Wix RequiredVersion="3.7.1224.0" 
   xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -9,16 +11,14 @@
   <Bundle Name="Sample Burn Installation" Version="$(bal.Version(1.0))" UpgradeCode="2C81F0BB-1891-4E83-B71A-5160BA33D985"
     Manufacturer="ACME"
     AboutUrl="http://wixtoolset.org">
-
-    <Update Location='http://wixtoolset.org/releases/feed/v3.7' />
-
+    
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
-      <Payload SourceFile="Resource\License.htm" Compressed="yes" />
+      <bal:WixExtendedBootstrapperApplication LicenseUrl="" />
+     <!-- Note: the name attibute must be "baextca.dll" but the source can be anything -->
+      <Payload Name="baextca.dll" Compressed="yes" SourceFile="..\build\baextca.dll" />
     </BootstrapperApplicationRef>
-    <WixVariable Id="WixExtbaLicenseUrl" Value="License.htm" />
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />
-    <Variable Name="InstallFolder2" Type="string" Value="[WindowsVolume]Database" />
 
     <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />

@@ -32,6 +32,9 @@
     <Variable Name="RadioButton3" Type="numeric" Value="0" />
     <Variable Name="RadioButton4" Type="numeric" Value="0" />
     
+    <Variable Name="FolderEditbox2State" Type="string" Value="disable" />
+    <Variable Name="BrowseButton2State" Type="string" Value="disable" />
+    
     <!-- Disable Option 4 -->
     <util:RegistrySearch Root="HKLM" Key="SOFTWARE\**NoValue**" Value="**NoValue**" Variable="RadioButton4" />
     

@@ -1,6 +1,6 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="WixStandardBootstrapperApplication.cpp" company="Outercurve Foundation">
-//   Copyright (c) 2004, Outercurve Foundation.
+// <copyright file="WixStandardBootstrapperApplication.cpp" company="X2 Systems Limited">
+//   Copyright (c) 2013, X2 Systems Limited.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
@@ -21,6 +21,10 @@ static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH = L"LaunchTarget";
 static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_ARGUMENTS = L"LaunchArguments";
 static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_HIDDEN = L"LaunchHidden";
 static const DWORD WIXSTDBA_ACQUIRE_PERCENTAGE = 30;
+
+extern "C" typedef HRESULT (WINAPI *PFN_BOOTSTRAPPER_CUSTOM_ACTION)(
+    __in IBootstrapperEngine* pEngine
+    );
 
 enum WIXSTDBA_STATE
 {
@@ -294,7 +298,7 @@ public: // IBootstrapperApplication
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update location: %ls.", wzUpdateLocation);
 
         m_wzUpdateLocation = wzUpdateLocation;
-        // If there is an upgrade link, check for update on a background thread 
+        // If there is an upgrade link, check for update on a background thread
         if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
         {
             ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, FALSE);
@@ -304,7 +308,18 @@ public: // IBootstrapperApplication
         return nRecommendation;
     }
 
-    
+
+    virtual STDMETHODIMP_(int) OnDetectBegin(
+        __in BOOL /*fInstalled*/,
+        __in DWORD /*cPackages*/
+        )
+    {
+        CallBootstrapperCustomAction("OnDetectBeginCustomAction");
+
+        return IDNOACTION;
+    }
+
+
     virtual STDMETHODIMP_(void) OnDetectComplete(
         __in HRESULT hrStatus
         )
@@ -849,7 +864,7 @@ private: // privates
         DWORD64 qwSize = 0;
 
         pThis->m_fUpdate = FALSE;
-        
+
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Checking for update.");
 
         // Load the update XML from a location url and parse it for an update.
@@ -864,7 +879,7 @@ private: // privates
 
         hr = XmlSelectSingleNode(pixd, L"/Setup/Upgrade", &pNode);
         BalExitOnFailure(hr, "Failed to select upgrade node.");
-        
+
         if (S_OK == hr)
         {
             hr = XmlGetAttributeEx(pNode, L"Url", &sczUpdateUrl);
@@ -885,7 +900,7 @@ private: // privates
         {
             BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "No update available.");
         }
-    
+
 LExit:
         ReleaseObject(pixd);
         ReleaseObject(pNode);
@@ -1892,9 +1907,9 @@ LExit:
                         THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
 
                         // If we are on the install, options or modify pages and this is a named control, try to set its default state.
-                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId || 
-                             m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId || 
-                             m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId) && 
+                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId ||
+                             m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId ||
+                             m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId) &&
                              pControl->sczName && *pControl->sczName)
                         {
                             // If this is a checkbox control, try to set its default state to the state of a matching named Burn variable.
@@ -1902,17 +1917,17 @@ LExit:
                             {
                                 LONGLONG llValue = 0;
                                 HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
-    
+
                                 ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
                             }
-    
+
                             // If this is a button control with the BS_AUTORADIOBUTTON style, try to set its default
                             // state to the state of a matching named Burn variable.
                             if (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)))
                             {
                                 LONGLONG llValue = 0;
                                 HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
-    
+
                                 // If the control value isn't set then disable it.
                                 if (!SUCCEEDED(hr))
                                 {
@@ -2506,6 +2521,45 @@ LExit:
                 }
             }
         }
+    }
+
+
+    void CallBootstrapperCustomAction(LPCSTR sczCustomAction)
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczBaExtCaPath = NULL;
+        HMODULE hModule = NULL;
+
+        hr = PathRelativeToModule(&sczBaExtCaPath, L"baextca.dll", m_hModule); 
+        BalExitOnFailure(hr, "Failed to get path to custom action DLL.");
+
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: CallBootstrapperCustomAction() - Custom action DLL '%ls'", sczBaExtCaPath);
+#endif
+        
+        hModule = ::LoadLibraryW(sczBaExtCaPath);
+        if (hModule)
+        {
+            PFN_BOOTSTRAPPER_CUSTOM_ACTION pfnCustomAction = reinterpret_cast<PFN_BOOTSTRAPPER_CUSTOM_ACTION>(::GetProcAddress(hModule, sczCustomAction));
+            BalExitOnNullWithLastError1(pfnCustomAction, hr, "Failed to get OnDetectBeginCustomAction entry-point from: %ls", sczBaExtCaPath);
+
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Calling %s...", sczCustomAction);
+            hr = pfnCustomAction(m_pEngine);
+            BalExitOnFailure(hr, "Failed to run custom action.");
+#ifdef DEBUG
+        }
+        else
+        {
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: CallBootstrapperCustomAction() - Failed to load DLL '%ls'", sczBaExtCaPath);
+#endif
+        }
+
+    LExit:
+        if (hModule)
+        {
+            ::FreeLibrary(hModule);
+        }
+        ReleaseStr(sczBaExtCaPath);    
     }
 
 

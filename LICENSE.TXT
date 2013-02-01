@@ -1,3 +1,5 @@
+Copyright (c) 2013, X2 Systems Limited.
+
 Copyright (c) 2004, Outercurve Foundation.
 This software is released under the Microsoft Reciprocal License (MS-RL) (the "License"); you may not use the software except in compliance with the License.
 

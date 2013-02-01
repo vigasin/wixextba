@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="wixstdba.cpp" company="X2 Systems Limited">
+// <copyright file="baextca.cpp" company="X2 Systems Limited">
 //   Copyright (c) 2013, X2 Systems Limited.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -7,7 +7,7 @@
 // </copyright>
 //
 // <summary>
-// Setup chainer/bootstrapper standard UI for WiX toolset.
+//   Entry point for bootstrapper custom action DLL.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -34,28 +34,4 @@ extern "C" BOOL WINAPI DllMain(
     }
 
     return TRUE;
-}
-
-
-extern "C" HRESULT WINAPI BootstrapperApplicationCreate(
-    __in IBootstrapperEngine* pEngine,
-    __in const BOOTSTRAPPER_COMMAND* pCommand,
-    __out IBootstrapperApplication** ppApplication
-    )
-{
-    HRESULT hr = S_OK;
-
-    BalInitialize(pEngine);
-
-    hr = CreateBootstrapperApplication(vhInstance, FALSE, pEngine, pCommand, ppApplication);
-    BalExitOnFailure(hr, "Failed to create bootstrapper application interface.");
-
-LExit:
-    return hr;
-}
-
-
-extern "C" void WINAPI BootstrapperApplicationDestroy()
-{
-    BalUninitialize();
 }

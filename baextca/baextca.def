@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------------------------------
-; <copyright file="wixstdba.def" company="X2 Systems Limited">
+; <copyright file="baextca.def" company="X2 Systems Limited">
 ;   Copyright (c) 2013, X2 Systems Limited.
 ;   This software is released under Microsoft Reciprocal License (MS-RL).
 ;   The license and further copyright text can be found in the file
@@ -7,10 +7,9 @@
 ; </copyright>
 ; 
 ; <summary>
-;    WiX Standard Bootstrapper Application DLL entry points.
+;    Extended Bootstrapper Application Custom Action DLL entry points.
 ; </summary>
 ;-------------------------------------------------------------------------------------------------
 
 EXPORTS
-    BootstrapperApplicationCreate
-    BootstrapperApplicationDestroy
+    OnDetectBeginCustomAction
