@@ -30,6 +30,8 @@
     <Variable Name="RadioButton3" Type="numeric" Value="0" />
     <Variable Name="RadioButton4" Type="numeric" Value="0" />
 
+    <Variable Name="Username" Type="string" Value="Value of Username variable" />
+
     <Chain DisableSystemRestore="yes">
       <PackageGroupRef Id="NetFx40Redist" />
       <MsiPackage

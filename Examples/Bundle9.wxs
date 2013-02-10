@@ -15,7 +15,7 @@
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
       <bal:WixExtendedBootstrapperApplication LicenseUrl="" />
      <!-- Note: the name attibute must be "baextca.dll" but the source can be anything -->
-      <Payload Name="baextca.dll" Compressed="yes" SourceFile="..\build\baextca.dll" />
+      <Payload Name="baextca.dll" Compressed="yes" SourceFile="baextca.dll" />
     </BootstrapperApplicationRef>
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]ACME" />

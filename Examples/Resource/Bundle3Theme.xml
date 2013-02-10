@@ -43,7 +43,7 @@
     <Button Name="BrowseButton" X="-11" Y="142" Width="75" Height="23" TabStop="yes" FontId="3">#(loc.OptionsBrowseButton)</Button>
 
     <Text X="11" Y="171" Width="-11" Height="17" FontId="3">Textbox</Text>
-    <Editbox Name="Sitename" X="11" Y="193" Width="-91" Height="21" TabStop="yes" FontId="3">Useful Text</Editbox>
+    <Editbox Name="Username" X="11" Y="193" Width="-91" Height="21" TabStop="yes" FontId="3">[Username]</Editbox>
 
     <Button Name="OptionsOkButton" X="-91" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0">#(loc.OptionsOkButton)</Button>
     <Button Name="OptionsCancelButton" X="-11" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0">#(loc.OptionsCancelButton)</Button>

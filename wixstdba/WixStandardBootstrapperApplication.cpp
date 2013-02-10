@@ -2492,7 +2492,9 @@ LExit:
     }
 
 
-    void SavePageSettings(WIXSTDBA_PAGE page)
+    void SavePageSettings(
+        __in WIXSTDBA_PAGE page
+        )
     {
         THEME_PAGE* pPage = NULL;
 
@@ -2524,7 +2526,9 @@ LExit:
     }
 
 
-    void CallBootstrapperCustomAction(LPCSTR sczCustomAction)
+    void CallBootstrapperCustomAction(
+        __in LPCSTR sczCustomAction
+        )
     {
         HRESULT hr = S_OK;
         LPWSTR sczBaExtCaPath = NULL;

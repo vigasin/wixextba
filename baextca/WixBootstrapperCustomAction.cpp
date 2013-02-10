@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+HRESULT GetFileVersion(__in IBootstrapperEngine*);
+
 extern "C" HRESULT WINAPI OnDetectBeginCustomAction(
     __in IBootstrapperEngine* pEngine
     )
@@ -18,7 +20,6 @@ extern "C" HRESULT WINAPI OnDetectBeginCustomAction(
     HKEY hkKey = NULL;
     LPWSTR sczValue = NULL;
     LPWSTR sczFormatedValue = NULL;
-    ULARGE_INTEGER uliVersion = { };
 
     // This is required to enable logging functions
     BalInitialize(pEngine);
@@ -89,15 +90,8 @@ extern "C" HRESULT WINAPI OnDetectBeginCustomAction(
     ReleaseNullStr(sczValue); // Release string so it can be re-used
 
     //---------------------------------------------------------------------------------------------
-    // Example of function call to get the file version of this bundle
-    BalFormatString(L"[WixBundleOriginalSource]", &sczValue);
-    BalExitOnFailure(hr, "Failed to format variable.");
-
-    FileVersion(sczValue, &uliVersion.HighPart, &uliVersion.LowPart);
+    hr = GetFileVersion(pEngine);
     BalExitOnFailure(hr, "Failed to get file version.");
-
-    hr = pEngine->SetVariableVersion(L"FileVersion", uliVersion.QuadPart);
-    BalExitOnFailure(hr, "Failed to set variable.");
     //---------------------------------------------------------------------------------------------
 
 LExit:
@@ -108,3 +102,30 @@ LExit:
     return hr;
 }
 
+
+//---------------------------------------------------------------------------------------------
+// Example of function call to get the file version of this bundle
+//---------------------------------------------------------------------------------------------
+HRESULT GetFileVersion(__in IBootstrapperEngine* pEngine)
+{
+    HRESULT hr = S_OK;
+    LPWSTR sczValue = NULL;
+    ULARGE_INTEGER uliVersion = { };
+
+
+    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "GetFileVersion()");
+
+    BalFormatString(L"[WixBundleOriginalSource]", &sczValue);
+    BalExitOnFailure(hr, "Failed to format variable.");
+
+    FileVersion(sczValue, &uliVersion.HighPart, &uliVersion.LowPart);
+    BalExitOnFailure(hr, "Failed to get file version.");
+
+    hr = pEngine->SetVariableVersion(L"FileVersion", uliVersion.QuadPart);
+    BalExitOnFailure(hr, "Failed to set variable.");
+
+LExit:
+    ReleaseStr(sczValue);
+
+    return hr;
+}
