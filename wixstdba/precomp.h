@@ -51,3 +51,5 @@ HRESULT CreateBootstrapperApplication(
     __in const BOOTSTRAPPER_COMMAND* pCommand,
     __out IBootstrapperApplication** ppApplication
     );
+
+#define BalExitOnNullWithLastError2(p, x, f, s, t) if (NULL == p) { DWORD Dutil_er = ::GetLastError(); x = HRESULT_FROM_WIN32(Dutil_er); if (!FAILED(x)) { x = E_FAIL; } BalLogError(x, f, s, t); ExitTrace2(x, f, s, t); goto LExit; }
