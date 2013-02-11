@@ -1711,6 +1711,8 @@ LExit:
 
         SetState(WIXSTDBA_STATE_PLANNING, hr);
 
+        CallBootstrapperCustomAction("OnPlanCustomAction");
+
         hr = m_pEngine->Plan(action);
         BalExitOnFailure(hr, "Failed to start planning packages.");
 
@@ -2545,7 +2547,7 @@ LExit:
         if (hModule)
         {
             PFN_BOOTSTRAPPER_CUSTOM_ACTION pfnCustomAction = reinterpret_cast<PFN_BOOTSTRAPPER_CUSTOM_ACTION>(::GetProcAddress(hModule, sczCustomAction));
-            BalExitOnNullWithLastError1(pfnCustomAction, hr, "Failed to get OnDetectBeginCustomAction entry-point from: %ls", sczBaExtCaPath);
+            BalExitOnNullWithLastError2(pfnCustomAction, hr, "Failed to get %s entry-point from: %ls", sczCustomAction, sczBaExtCaPath);
 
             BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Calling %s...", sczCustomAction);
             hr = pfnCustomAction(m_pEngine);

@@ -13,7 +13,7 @@
 
 #include <winver.h>
 #include <windows.h>
-#include "wixver.h"
+#include "baextcaver.h"
 
 #define VER_APP
 #define VER_ORIGINAL_FILENAME "baextca.dll"

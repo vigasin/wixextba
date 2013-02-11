@@ -7,10 +7,8 @@ md obj 1>nul 2>nul
 
 echo Building examples...
 
-rem pushd ..\baextca
-rem Call build.bat
-rem popd
-
+Call :build Setup msi
+Call :build Bundle10 exe
 Call :build Setup msi
 Call :build Bundle9 exe
 Call :build Setup msi

@@ -103,6 +103,49 @@ LExit:
 }
 
 
+extern "C" HRESULT WINAPI OnPlanCustomAction( 
+    __in IBootstrapperEngine* pEngine 
+    ) 
+{ 
+    HRESULT hr = S_OK; 
+    // This is required to enable logging functions 
+    BalInitialize(pEngine); 
+    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "OnPlanCustomAction()"); 
+    //--------------------------------------------------------------------------------------------- 
+        // Example of convert 4 radio button values in 1 
+    LONGLONG llValue = 0; 
+        if (SUCCEEDED(BalGetNumericVariable(L"RadioButton1", &llValue)) && llValue) 
+        { 
+                pEngine->SetVariableNumeric(L"RadioButton", 1); 
+                BalExitOnFailure(hr, "Failed to set variable."); 
+        } 
+        else if (SUCCEEDED(BalGetNumericVariable(L"RadioButton2", &llValue)) && llValue) 
+        { 
+                pEngine->SetVariableNumeric(L"RadioButton", 2); 
+                BalExitOnFailure(hr, "Failed to set variable."); 
+        } 
+        else if (SUCCEEDED(BalGetNumericVariable(L"RadioButton3", &llValue)) && llValue) 
+        { 
+                pEngine->SetVariableNumeric(L"RadioButton", 3); 
+                BalExitOnFailure(hr, "Failed to set variable."); 
+        } 
+        else if (SUCCEEDED(BalGetNumericVariable(L"RadioButton4", &llValue)) && llValue) 
+        { 
+                pEngine->SetVariableNumeric(L"RadioButton", 4); 
+                BalExitOnFailure(hr, "Failed to set variable."); 
+        } 
+        else 
+        { 
+                pEngine->SetVariableNumeric(L"RadioButton", 0); 
+                BalExitOnFailure(hr, "Failed to set variable."); 
+        } 
+    //--------------------------------------------------------------------------------------------- 
+        
+LExit: 
+    return hr; 
+} 
+
+
 //---------------------------------------------------------------------------------------------
 // Example of function call to get the file version of this bundle
 //---------------------------------------------------------------------------------------------

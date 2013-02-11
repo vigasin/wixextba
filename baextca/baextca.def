@@ -13,3 +13,5 @@
 
 EXPORTS
     OnDetectBeginCustomAction
+    OnPlanCustomAction
+
