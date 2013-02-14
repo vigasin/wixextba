@@ -314,8 +314,10 @@ public: // IBootstrapperApplication
         __in DWORD /*cPackages*/
         )
     {
-        CallBootstrapperCustomAction("OnDetectBeginCustomAction");
-
+        if (!SUCCEEDED(CallBootstrapperCustomAction("OnDetectBeginCustomAction")))
+        {
+                return IDCANCEL;
+        }
         return IDNOACTION;
     }
 
@@ -2528,7 +2530,7 @@ LExit:
     }
 
 
-    void CallBootstrapperCustomAction(
+    HRESULT CallBootstrapperCustomAction(
         __in LPCSTR sczCustomAction
         )
     {
@@ -2536,13 +2538,13 @@ LExit:
         LPWSTR sczBaExtCaPath = NULL;
         HMODULE hModule = NULL;
 
-        hr = PathRelativeToModule(&sczBaExtCaPath, L"baextca.dll", m_hModule); 
+        hr = PathRelativeToModule(&sczBaExtCaPath, L"baextca.dll", m_hModule);
         BalExitOnFailure(hr, "Failed to get path to custom action DLL.");
 
 #ifdef DEBUG
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: CallBootstrapperCustomAction() - Custom action DLL '%ls'", sczBaExtCaPath);
 #endif
-        
+
         hModule = ::LoadLibraryW(sczBaExtCaPath);
         if (hModule)
         {
@@ -2565,7 +2567,9 @@ LExit:
         {
             ::FreeLibrary(hModule);
         }
-        ReleaseStr(sczBaExtCaPath);    
+        ReleaseStr(sczBaExtCaPath);
+
+        return hr;
     }
 
 
