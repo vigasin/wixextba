@@ -48,4 +48,5 @@
 //#include "balcondition.h"
 #include "balutil.h"
 
+#include "WixBootstrapperCustomAction.h"
 

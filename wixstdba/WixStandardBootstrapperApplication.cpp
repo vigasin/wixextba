@@ -22,10 +22,6 @@ static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_ARGUMENTS = L"LaunchArguments";
 static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_HIDDEN = L"LaunchHidden";
 static const DWORD WIXSTDBA_ACQUIRE_PERCENTAGE = 30;
 
-extern "C" typedef HRESULT (WINAPI *PFN_BOOTSTRAPPER_CUSTOM_ACTION)(
-    __in IBootstrapperEngine* pEngine
-    );
-
 enum WIXSTDBA_STATE
 {
     WIXSTDBA_STATE_OPTIONS,
@@ -314,10 +310,6 @@ public: // IBootstrapperApplication
         __in DWORD /*cPackages*/
         )
     {
-        if (!SUCCEEDED(CallBootstrapperCustomAction("OnDetectBeginCustomAction")))
-        {
-                return IDCANCEL;
-        }
         return IDNOACTION;
     }
 
@@ -1094,7 +1086,7 @@ LExit:
             ThemeUpdateCaption(m_pTheme, sczCaption);
         }
 
-    LExit:
+LExit:
         ReleaseStr(sczCaption);
         ReleaseStr(sczThemePath);
 
@@ -1668,6 +1660,13 @@ LExit:
     {
         HRESULT hr = S_OK;
 
+        // Call the detect custom action if defined
+        if (m_pCustomAction)
+        {
+            hr = m_pCustomAction->OnDetectCustomAction();
+            BalExitOnFailure(hr, "Failed to calling detect custom action.");
+        }
+
         SetState(WIXSTDBA_STATE_DETECTING, hr);
 
         m_pEngine->CloseSplashScreen();
@@ -1713,7 +1712,10 @@ LExit:
 
         SetState(WIXSTDBA_STATE_PLANNING, hr);
 
-        CallBootstrapperCustomAction("OnPlanCustomAction");
+        if (m_pCustomAction)
+        {
+            m_pCustomAction->OnPlanCustomAction();
+        }
 
         hr = m_pEngine->Plan(action);
         BalExitOnFailure(hr, "Failed to start planning packages.");
@@ -2530,45 +2532,41 @@ LExit:
     }
 
 
-    HRESULT CallBootstrapperCustomAction(
-        __in LPCSTR sczCustomAction
-        )
+    HRESULT LoadBootstrapperCustomAction()
     {
         HRESULT hr = S_OK;
         LPWSTR sczBaExtCaPath = NULL;
-        HMODULE hModule = NULL;
 
-        hr = PathRelativeToModule(&sczBaExtCaPath, L"baextca.dll", m_hModule);
+        hr = PathRelativeToModule(&sczBaExtCaPath, L"baextca.dll", m_hModule); 
         BalExitOnFailure(hr, "Failed to get path to custom action DLL.");
 
 #ifdef DEBUG
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: CallBootstrapperCustomAction() - Custom action DLL '%ls'", sczBaExtCaPath);
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperCustomAction() - Custom action DLL '%ls'", sczBaExtCaPath);
 #endif
-
-        hModule = ::LoadLibraryW(sczBaExtCaPath);
-        if (hModule)
+        
+        m_hCAModule = ::LoadLibraryW(sczBaExtCaPath);
+        if (m_hCAModule)
         {
-            PFN_BOOTSTRAPPER_CUSTOM_ACTION pfnCustomAction = reinterpret_cast<PFN_BOOTSTRAPPER_CUSTOM_ACTION>(::GetProcAddress(hModule, sczCustomAction));
-            BalExitOnNullWithLastError2(pfnCustomAction, hr, "Failed to get %s entry-point from: %ls", sczCustomAction, sczBaExtCaPath);
+            PFN_BOOTSTRAPPER_CUSTOM_ACTION_CREATE pfnCustomActionCreate = reinterpret_cast<PFN_BOOTSTRAPPER_CUSTOM_ACTION_CREATE>(::GetProcAddress(m_hCAModule, "CreateBootstrapperCustomAction"));
+            BalExitOnNullWithLastError1(pfnCustomActionCreate, hr, "Failed to get CreateBootstrapperCustomAction entry-point from: %ls", sczBaExtCaPath);
 
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Calling %s...", sczCustomAction);
-            hr = pfnCustomAction(m_pEngine);
-            BalExitOnFailure(hr, "Failed to run custom action.");
-#ifdef DEBUG
+            hr = pfnCustomActionCreate(m_pEngine, m_hCAModule, &m_pCustomAction);
+            BalExitOnFailure(hr, "Failed to create custom action.");
         }
+#ifdef DEBUG
         else
         {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: CallBootstrapperCustomAction() - Failed to load DLL '%ls'", sczBaExtCaPath);
-#endif
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperCustomAction() - Failed to load DLL '%ls'", sczBaExtCaPath);
         }
+#endif
 
     LExit:
-        if (hModule)
+        if ((NULL == m_pCustomAction) && m_hCAModule)
         {
-            ::FreeLibrary(hModule);
+            ::FreeLibrary(m_hCAModule);
         }
-        ReleaseStr(sczBaExtCaPath);
-
+        ReleaseStr(sczBaExtCaPath);    
+        
         return hr;
     }
 
@@ -2664,6 +2662,10 @@ public:
 
         pEngine->AddRef();
         m_pEngine = pEngine;
+
+        m_hCAModule = NULL;
+        m_pCustomAction = NULL;
+        LoadBootstrapperCustomAction();
     }
 
 
@@ -2689,6 +2691,11 @@ public:
         ReleaseStr(m_sczPrereqPackage);
         ReleaseStr(m_sczAfterForcedRestartPackage);
         ReleaseNullObject(m_pEngine);
+
+        if (m_hCAModule)
+        {
+            ::FreeLibrary(m_hCAModule);
+        }
     }
 
 private:
@@ -2744,6 +2751,9 @@ private:
 
     BOOL m_fUpdate;
     LPCWSTR m_wzUpdateLocation;
+
+    HMODULE m_hCAModule;
+    IWixBootstrapperCustomAction* m_pCustomAction;
 };
 
 
