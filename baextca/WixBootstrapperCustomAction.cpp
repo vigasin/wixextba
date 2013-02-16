@@ -63,7 +63,7 @@ public:
         //---------------------------------------------------------------------------------------------
 
         ReleaseNullStr(sczValue); // Release string so it can be re-used
-        
+
         //---------------------------------------------------------------------------------------------
         BalFormatString(L"WixBundleVersion=[WixBundleVersion]", &sczValue);
         BalExitOnFailure(hr, "Failed to format variable.");
@@ -90,12 +90,12 @@ public:
         //---------------------------------------------------------------------------------------------
 
         ReleaseNullStr(sczValue); // Release string so it can be re-used
-    
+
         //---------------------------------------------------------------------------------------------
         hr = PathRelativeToModule(&sczValue, NULL, m_hModule);
         hr = m_pEngine->SetVariableString(L"ModulePath", sczValue);
         //---------------------------------------------------------------------------------------------
-    
+
         ReleaseNullStr(sczValue); // Release string so it can be re-used
 
         //---------------------------------------------------------------------------------------------
@@ -111,12 +111,12 @@ LExit:
         return hr;
     }
 
-    
+
     STDMETHODIMP OnPlanCustomAction()
     {
         HRESULT hr = S_OK;
-    
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "OnPlanCustomAction()");
+
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan custom action");
 
         //---------------------------------------------------------------------------------------------
         // Example of converting 4 radio button values in to 1
@@ -221,10 +221,10 @@ extern "C" HRESULT WINAPI CreateBootstrapperCustomAction(
 
     pCustomAction = new CWixBootstrapperCustomAction(pEngine, hModule);
     ExitOnNull(pCustomAction, hr, E_OUTOFMEMORY, "Failed to create new bootstrapper custom action object.");
-    
+
     *ppCustomAction = pCustomAction;
-    pCustomAction = NULL;	
-    
+    pCustomAction = NULL;
+
 LExit:
     return hr;
 }

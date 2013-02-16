@@ -40,13 +40,5 @@ REM *****************************************************************
 REM Delete/create directory
 REM *****************************************************************
 :DeleteDir
-
 rd %1% /q/s 2>nul 1>nul
-rem md %1% 2>nul 1>nul
-rem if exist %1% goto CREATED
-rem echo Couldn't create %1% directory
-rem pause
-goto :EOF
-:CREATED
-
 goto :EOF
