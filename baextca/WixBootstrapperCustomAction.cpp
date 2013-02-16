@@ -103,7 +103,7 @@ public:
         BalExitOnFailure(hr, "Failed to get version.");
         //---------------------------------------------------------------------------------------------
 
-LExit:
+    LExit:
         ReleaseRegKey(hkKey);
         ReleaseStr(sczValue);
         ReleaseStr(sczFormatedValue);
