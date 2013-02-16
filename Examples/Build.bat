@@ -28,8 +28,6 @@ Call :build Bundle7 exe
 Call :build Setup msi
 Call :build Bundle8 exe
 
-rd obj /q/s 2>nul 1>nul
-
 echo.
 echo Build complete
 echo.
@@ -57,5 +55,7 @@ if %errorlevel% neq 0 (
   pause
   goto :EOF
 )
+
+rd obj /q/s 2>nul 1>nul
 goto :EOF
 REM *****************************************************************
