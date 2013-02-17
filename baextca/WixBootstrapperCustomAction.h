@@ -10,13 +10,14 @@
 #include <windows.h>
 
 #include "IBootstrapperEngine.h"
-//#include "IBootstrapperApplication.h"
 
 interface IWixBootstrapperCustomAction
 {
 public:
-    virtual STDMETHODIMP OnDetectCustomAction() {};
-    virtual STDMETHODIMP OnPlanCustomAction() {};
+    virtual STDMETHODIMP OnDetectCustomAction() { return S_OK; };
+    virtual STDMETHODIMP OnDetectCompleteCustomAction() { return S_OK; };
+    virtual STDMETHODIMP OnPlanCustomAction() { return S_OK; };
+    virtual STDMETHODIMP OnPlanCompleteCustomAction() { return S_OK; };
 };
 
 extern "C" typedef HRESULT (WINAPI *PFN_BOOTSTRAPPER_CUSTOM_ACTION_CREATE)(

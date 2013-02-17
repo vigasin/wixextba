@@ -1660,11 +1660,11 @@ LExit:
     {
         HRESULT hr = S_OK;
 
-        // Call the detect custom action if defined
+        // Call the detect custom action
         if (m_pCustomAction)
         {
             hr = m_pCustomAction->OnDetectCustomAction();
-            BalExitOnFailure(hr, "Failed to calling detect custom action.");
+            BalExitOnFailure(hr, "Failed calling detect custom action.");
         }
 
         SetState(WIXSTDBA_STATE_DETECTING, hr);
@@ -1674,6 +1674,13 @@ LExit:
         // Tell the core we're ready for the packages to be processed now.
         hr = m_pEngine->Detect();
         BalExitOnFailure(hr, "Failed to start detecting chain.");
+
+        // Call the detect complete custom action
+        if (m_pCustomAction)
+        {
+            hr = m_pCustomAction->OnDetectCompleteCustomAction();
+            BalExitOnFailure(hr, "Failed calling detect complete custom action.");
+        }
 
     LExit:
         if (FAILED(hr))
@@ -1719,6 +1726,11 @@ LExit:
 
         hr = m_pEngine->Plan(action);
         BalExitOnFailure(hr, "Failed to start planning packages.");
+
+        if (m_pCustomAction)
+        {
+            hr = m_pCustomAction->OnPlanCompleteCustomAction();
+        }
 
     LExit:
         if (FAILED(hr))

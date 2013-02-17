@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 
-class CWixBootstrapperCustomAction
+class CWixBootstrapperCustomAction : IWixBootstrapperCustomAction
 {
 public:
     virtual STDMETHODIMP OnDetectCustomAction()
@@ -112,6 +112,13 @@ public:
     }
 
 
+    virtual STDMETHODIMP OnDetectCompleteCustomAction()
+    {
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect complete custom action");
+        return S_OK;
+    }
+
+        
     STDMETHODIMP OnPlanCustomAction()
     {
         HRESULT hr = S_OK;
@@ -152,6 +159,12 @@ public:
         return hr;
     }
 
+
+    virtual STDMETHODIMP OnPlanCompleteCustomAction()
+    {
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan complete custom action");
+        return S_OK;
+    }
 
 private:
     //---------------------------------------------------------------------------------------------
