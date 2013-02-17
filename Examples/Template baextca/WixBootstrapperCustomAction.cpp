@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 
-class CWixBootstrapperCustomAction
+class CWixBootstrapperCustomAction : IWixBootstrapperCustomAction
 {
 public:
     virtual STDMETHODIMP OnDetectCustomAction()
