@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------------------------------------
 // <copyright file="ValuePreprocessorExtension.cs" company="">
 // </copyright>
-// 
+//
 // <summary>
 // A WiX preprocessor extension.
 // </summary>
@@ -31,6 +31,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         public override string EvaluateFunction(string prefix, string function, string[] args)
         {
             string result = null;
+
             switch (prefix)
             {
                 case "bal":
@@ -52,8 +53,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
                             break;
                     }
+
                     break;
             }
+
             return result;
         }
     }

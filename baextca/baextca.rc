@@ -108,7 +108,7 @@ BLOCK "StringFileInfo"
         VALUE "FileDescription",   VER_FILE_DESCRIPTION
         VALUE "FileVersion",       VER_FILE_VERSION_STRING
         VALUE "InternalName",      VER_INTERNAL_NAME
-        
+
         VALUE "LegalCopyright",    VER_LEGAL_COPYRIGHT
 
         VALUE "OriginalFilename",  VER_ORIGINAL_FILENAME

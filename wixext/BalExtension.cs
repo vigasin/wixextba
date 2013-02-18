@@ -26,7 +26,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         private TableDefinitionCollection tableDefinitions;
 
         private BalPreprocessorExtension preprocessorExtension;
-        
+
         /// <summary>
         /// Gets the optional compiler extension.
         /// </summary>

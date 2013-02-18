@@ -318,6 +318,12 @@ public: // IBootstrapperApplication
         __in HRESULT hrStatus
         )
     {
+        // Call the detect complete custom action
+        if (SUCCEEDED(hrStatus) && m_pCustomAction)
+        {
+            m_pCustomAction->OnDetectCompleteCustomAction();
+        }
+
         if (SUCCEEDED(hrStatus))
         {
             hrStatus = EvaluateConditions();
@@ -400,6 +406,11 @@ public: // IBootstrapperApplication
         __in HRESULT hrStatus
         )
     {
+        if (SUCCEEDED(hrStatus) && m_pCustomAction)
+        {
+            m_pCustomAction->OnPlanCompleteCustomAction();
+        }
+
         SetState(WIXSTDBA_STATE_PLANNED, hrStatus);
 
         if (SUCCEEDED(hrStatus))
@@ -1675,13 +1686,6 @@ LExit:
         hr = m_pEngine->Detect();
         BalExitOnFailure(hr, "Failed to start detecting chain.");
 
-        // Call the detect complete custom action
-        if (m_pCustomAction)
-        {
-            hr = m_pCustomAction->OnDetectCompleteCustomAction();
-            BalExitOnFailure(hr, "Failed calling detect complete custom action.");
-        }
-
     LExit:
         if (FAILED(hr))
         {
@@ -1726,11 +1730,6 @@ LExit:
 
         hr = m_pEngine->Plan(action);
         BalExitOnFailure(hr, "Failed to start planning packages.");
-
-        if (m_pCustomAction)
-        {
-            hr = m_pCustomAction->OnPlanCompleteCustomAction();
-        }
 
     LExit:
         if (FAILED(hr))
@@ -1991,6 +1990,22 @@ LExit:
 
                 ThemeShowPage(m_pTheme, dwOldPageId, SW_HIDE);
                 ThemeShowPage(m_pTheme, dwNewPageId, SW_SHOW);
+               
+                // On the install page set the focus to the install button or the next enabled control if install is disabled 
+                if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId) 
+                { 
+                    HWND hwndFocus = ::GetDlgItem(m_pTheme->hwndParent, WIXSTDBA_CONTROL_INSTALL_BUTTON); 
+                    if (hwndFocus && !ThemeControlEnabled(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON)) 
+                    { 
+                        //hwndFocus = ::GetDlgItem(m_pTheme->hwndParent, WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON); 
+                        hwndFocus = ::GetNextDlgTabItem(m_pTheme->hwndParent, hwndFocus, FALSE); 
+                    }
+
+                    if (hwndFocus) 
+                    { 
+                        ::SetFocus(hwndFocus); 
+                    } 
+                }
             }
         }
 

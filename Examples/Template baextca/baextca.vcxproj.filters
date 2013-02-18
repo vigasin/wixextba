@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WixStandardBootstrapperCustomAction.cpp">
+    <ClCompile Include="baextca.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="baextca.cpp">
+    <ClCompile Include="WixBootstrapperCustomAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -34,9 +34,12 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WixBootstrapperCustomAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="wixstdba.rc">
+    <ResourceCompile Include="baextca.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

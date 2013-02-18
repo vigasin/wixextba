@@ -14,7 +14,7 @@
     
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
       <bal:WixExtendedBootstrapperApplication LicenseUrl="" />
-     <!-- Note: the name attibute must be "baextca.dll" but the source can be anything -->
+      <!-- Note: the name attibute must be "baextca.dll" but the source can be anything -->
       <Payload Name="baextca.dll" Compressed="yes" SourceFile="baextca.dll" />
     </BootstrapperApplicationRef>
 

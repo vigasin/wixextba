@@ -13,7 +13,7 @@
 class CWixBootstrapperCustomAction : IWixBootstrapperCustomAction
 {
 public:
-    virtual STDMETHODIMP OnDetectCustomAction()
+    STDMETHODIMP OnDetectCustomAction()
     {
         HRESULT hr = S_OK;
         HKEY hkKey = NULL;
@@ -112,7 +112,7 @@ public:
     }
 
 
-    virtual STDMETHODIMP OnDetectCompleteCustomAction()
+    STDMETHODIMP OnDetectCompleteCustomAction()
     {
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect complete custom action");
         return S_OK;
@@ -160,7 +160,7 @@ public:
     }
 
 
-    virtual STDMETHODIMP OnPlanCompleteCustomAction()
+    STDMETHODIMP OnPlanCompleteCustomAction()
     {
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan complete custom action");
         return S_OK;

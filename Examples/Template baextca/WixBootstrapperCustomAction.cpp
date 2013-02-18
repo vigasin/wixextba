@@ -13,7 +13,7 @@
 class CWixBootstrapperCustomAction : IWixBootstrapperCustomAction
 {
 public:
-    virtual STDMETHODIMP OnDetectCustomAction()
+    STDMETHODIMP OnDetectCustomAction()
     {
         HRESULT hr = S_OK;
 
@@ -29,6 +29,7 @@ public:
     }
 
 
+/*
     STDMETHODIMP OnPlanCustomAction()
     {
         HRESULT hr = S_OK;
@@ -43,6 +44,7 @@ public:
     LExit:
         return hr;
     }
+*/
 
 
 private:
