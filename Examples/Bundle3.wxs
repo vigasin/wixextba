@@ -40,6 +40,7 @@
         SourceFile="Setup.msi"
         Vital="yes">
         <MsiProperty Name="APPLICATIONFOLDER" Value="[InstallFolder]" />
+        <MsiProperty Name="USERNAME" Value="[Username]" />
       </MsiPackage>
     </Chain>
 

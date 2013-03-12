@@ -112,11 +112,15 @@ public:
     }
 
 
+/*
+
+
     STDMETHODIMP OnDetectCompleteCustomAction()
     {
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect complete custom action");
         return S_OK;
     }
+*/
 
         
     STDMETHODIMP OnPlanCustomAction()

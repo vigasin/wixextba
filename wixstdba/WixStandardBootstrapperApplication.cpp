@@ -516,10 +516,10 @@ public: // IBootstrapperApplication
         __in DWORD dwUIHint,
         __in DWORD /*cData*/,
         __in_ecount_z_opt(cData) LPCWSTR* /*rgwzData*/,
-        __in int /*nRecommendation*/
+        __in int nRecommendation
         )
     {
-        int nResult = IDNOACTION;
+        int nResult = nRecommendation;
         LPWSTR sczError = NULL;
 
         if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_command.display)
@@ -1319,6 +1319,12 @@ LExit:
             dwWindowStyle &= ~WS_VISIBLE;
         }
 
+        // Don't show the window if there is a splash screen (it will be made visible when the splash screen is hidden) 
+        if (::IsWindow(m_command.hwndSplashScreen)) 
+        { 
+            dwWindowStyle &= ~WS_VISIBLE; 
+        } 
+
         // Center the window on the monitor with the mouse.
         if (::GetCursorPos(&ptCursor))
         {
@@ -1658,6 +1664,12 @@ LExit:
     {
         SetState(WIXSTDBA_STATE_HELP, S_OK);
 
+        // If not form not visible and it should be displayed show it here and hide splash screen 
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
+        { 
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
+        } 
+
         m_pEngine->CloseSplashScreen();
 
         return;
@@ -1679,6 +1691,12 @@ LExit:
         }
 
         SetState(WIXSTDBA_STATE_DETECTING, hr);
+
+        // If not form not visible and it should be displayed show it here and hide splash screen 
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
+        { 
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
+        } 
 
         m_pEngine->CloseSplashScreen();
 
