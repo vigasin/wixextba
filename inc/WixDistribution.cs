@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Resources;
 
-[assembly: AssemblyCompany("X2 Systems Limited")]
-[assembly: AssemblyCopyright("Copyright © X2 Systems Limited. All rights reserved.")]
+[assembly: AssemblyCompany("Outercurve Foundation")]
+[assembly: AssemblyCopyright("Copyright © Outercurve Foundation. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 #if DEBUG
     [assembly: AssemblyConfiguration("DEBUG")]
