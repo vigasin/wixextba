@@ -14,7 +14,7 @@ if %errorlevel% neq 0 (
 	goto :EOF
 )
 
-copy build\baextca.dll ..\Examples /y
+copy build\baextbaf.dll ..\Examples /y
 
 echo.
 
