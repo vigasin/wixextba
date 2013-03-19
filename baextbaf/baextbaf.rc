@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="baextca.rc" company="X2 Systems Limited">
+// <copyright file="baextbaf.rc" company="X2 Systems Limited">
 //   Copyright (c) 2013, X2 Systems Limited.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -7,19 +7,19 @@
 // </copyright>
 //
 // <summary>
-// WiX Extendend Bootstrapper Custom Action resource file.
+// WiX Extendend Bootstrapper BA function resource file.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
 #include <winver.h>
 #include <windows.h>
-#include "baextcaver.h"
+#include "baextbafver.h"
 
 #define VER_APP
-#define VER_ORIGINAL_FILENAME "baextca.dll"
-#define VER_INTERNAL_NAME "baextca"
-#define VER_PRODUCT_NAME "WiX Extendend Bootstrapper Custom Action"
-#define VER_FILE_DESCRIPTION "WiX Extendend Bootstrapper Custom Action"
+#define VER_ORIGINAL_FILENAME "baextbaf.dll"
+#define VER_INTERNAL_NAME "baextbaf"
+#define VER_PRODUCT_NAME "WiX Extendend Bootstrapper BA function"
+#define VER_FILE_DESCRIPTION "WiX Extendend Bootstrapper BA function"
 
 #ifdef DEBUG
     #define VER_DEBUG                VS_FF_DEBUG

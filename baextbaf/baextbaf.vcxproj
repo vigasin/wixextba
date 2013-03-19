@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-  <copyright file="baextca.vcxproj" company="X2 Systems Limited">
+  <copyright file="baextbaf.vcxproj" company="X2 Systems Limited">
     Copyright (c) 2013, X2 Systems Limited.
     This software is released under Microsoft Reciprocal License (MS-RL).
     The license and further copyright text can be found in the file
@@ -20,11 +20,11 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EB0A7D51-2133-4EE7-B6CA-87DBEAC67E02}</ProjectGuid>
-    <RootNamespace>BaExtCA</RootNamespace>
+    <RootNamespace>BaExtBAF</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <ProjectName>baextca</ProjectName>
+    <ProjectName>baextbaf</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -77,7 +77,7 @@
     <Link>
       <AdditionalDependencies>dutil.lib;balutil.lib;comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WiX)SDK\VS2010\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>baextca.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>baextbaf.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -104,28 +104,28 @@
     <Link>
       <AdditionalDependencies>dutil.lib;balutil.lib;comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WiX)SDK\VS2010\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>baextca.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>baextbaf.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="WixBootstrapperCustomAction.cpp" />
-    <ClCompile Include="baextca.cpp">
+    <ClCompile Include="WixBootstrapperBAFunction.cpp" />
+    <ClCompile Include="baextbaf.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="baextca.def" />
+    <None Include="baextbaf.def" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="baextca.rc" />
+    <ResourceCompile Include="baextbaf.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="precomp.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="WixBootstrapperCustomAction.h" />
+    <ClInclude Include="WixBootstrapperBAFunction.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

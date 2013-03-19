@@ -4,7 +4,7 @@
     <MajorBuildNumber>1</MajorBuildNumber>
     <MinorBuildNumber>0</MinorBuildNumber>
 
-    <CppVersionFile>.\baextcaver.h</CppVersionFile>
+    <CppVersionFile>.\baextbafver.h</CppVersionFile>
   </PropertyGroup>
 
   <PropertyGroup>

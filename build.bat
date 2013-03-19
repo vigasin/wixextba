@@ -11,7 +11,7 @@ Call :DeleteDir "%outdir%"
 Call :DeleteDir "ipch"
 
 %MSBUILD% inc\Version.proj
-%MSBUILD% baextca\Version.proj
+%MSBUILD% baextbaf\Version.proj
 %MSBUILD% BalExtensionExt.sln /t:Rebuild /p:Configuration=Release /p:Platform="Mixed Platforms" /p:RunCodeAnalysis=false /p:DefineConstants="TRACE" /p:OutDir="%outdir%\\" /l:FileLogger,Microsoft.Build.Engine;logfile=build.log
 if %errorlevel% neq 0 (
 	echo Build failed
@@ -19,7 +19,7 @@ if %errorlevel% neq 0 (
 	goto :EOF
 )
 
-copy build\baextca.dll Examples /y
+copy build\baextbaf.dll Examples /y
 
 pushd Examples
 Call Build

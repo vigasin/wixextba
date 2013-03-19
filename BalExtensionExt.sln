@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixBalExtensionExt", "wixex
 		{3444D952-F21C-496F-AB6B-56435BFD0787} = {3444D952-F21C-496F-AB6B-56435BFD0787}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baextca", "baextca\baextca.vcxproj", "{EB0A7D51-2133-4EE7-B6CA-87DBEAC67E02}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "baextbaf", "baextbaf\baextbaf.vcxproj", "{EB0A7D51-2133-4EE7-B6CA-87DBEAC67E02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

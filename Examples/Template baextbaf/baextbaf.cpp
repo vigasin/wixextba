@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="baextca.cpp" company="X2 Systems Limited">
+// <copyright file="baextbaf.cpp" company="X2 Systems Limited">
 //   Copyright (c) 2013, X2 Systems Limited.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -7,7 +7,7 @@
 // </copyright>
 //
 // <summary>
-//   Entry point for bootstrapper custom action DLL.
+//   Entry point for bootstrapper BA function DLL.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 

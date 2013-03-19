@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="WixBootstrapperCustomAction.cpp" company="X2 Systems Limited">
+// <copyright file="WixBootstrapperBAFuntion.cpp" company="X2 Systems Limited">
 //   Copyright (c) 2013, X2 Systems Limited.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -10,20 +10,20 @@
 
 #include "precomp.h"
 
-class CWixBootstrapperCustomAction : IWixBootstrapperCustomAction
+class CWixBootstrapperBAFuntion : IWixBootstrapperBAFuntion
 {
 public:
-    STDMETHODIMP OnDetectCustomAction()
+    STDMETHODIMP OnDetectBAFuntion()
     {
         HRESULT hr = S_OK;
         HKEY hkKey = NULL;
         LPWSTR sczValue = NULL;
         LPWSTR sczFormatedValue = NULL;
 
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect custom action");
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect BA function");
 
         //---------------------------------------------------------------------------------------------
-        // Example of custom action failure
+        // Example of BA function failure
         //hr = E_NOTIMPL;
         //BalExitOnFailure(hr, "Test failure.");
         //---------------------------------------------------------------------------------------------
@@ -103,6 +103,11 @@ public:
         BalExitOnFailure(hr, "Failed to get version.");
         //---------------------------------------------------------------------------------------------
 
+        //---------------------------------------------------------------------------------------------
+        // Delay start to show splashscreen handling
+        Delay();
+        //---------------------------------------------------------------------------------------------
+
     LExit:
         ReleaseRegKey(hkKey);
         ReleaseStr(sczValue);
@@ -113,21 +118,19 @@ public:
 
 
 /*
-
-
-    STDMETHODIMP OnDetectCompleteCustomAction()
+    STDMETHODIMP OnDetectCompleteBAFuntion()
     {
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect complete custom action");
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect complete BA function");
         return S_OK;
     }
 */
 
         
-    STDMETHODIMP OnPlanCustomAction()
+    STDMETHODIMP OnPlanBAFuntion()
     {
         HRESULT hr = S_OK;
 
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan custom action");
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan BA function");
 
         //---------------------------------------------------------------------------------------------
         // Example of converting 4 radio button values in to 1
@@ -164,9 +167,9 @@ public:
     }
 
 
-    STDMETHODIMP OnPlanCompleteCustomAction()
+    STDMETHODIMP OnPlanCompleteBAFuntion()
     {
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan complete custom action");
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan complete BA function");
         return S_OK;
     }
 
@@ -196,6 +199,22 @@ private:
     }
 
 
+    HRESULT Delay() 
+    { 
+        HRESULT hr = S_OK; 
+        LONGLONG llDelay = 0; 
+        
+        BalGetNumericVariable(L"DelayStart", &llDelay); 
+        if (llDelay) 
+        { 
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Delay for %dms", (DWORD)llDelay); 
+            ::Sleep((DWORD)llDelay); 
+        } 
+        
+        return hr; 
+    } 
+
+
 private:
     HMODULE m_hModule;
     IBootstrapperEngine* m_pEngine;
@@ -205,7 +224,7 @@ public:
     //
     // Constructor - initialize member variables.
     //
-    CWixBootstrapperCustomAction(
+    CWixBootstrapperBAFuntion(
         __in IBootstrapperEngine* pEngine,
         __in HMODULE hModule
         )
@@ -217,16 +236,16 @@ public:
     //
     // Destructor - release member variables.
     //
-    ~CWixBootstrapperCustomAction()
+    ~CWixBootstrapperBAFuntion()
     {
     }
 };
 
 
-extern "C" HRESULT WINAPI CreateBootstrapperCustomAction(
+extern "C" HRESULT WINAPI CreateBootstrapperBAFuntion(
     __in IBootstrapperEngine* pEngine,
     __in HMODULE hModule,
-    __out CWixBootstrapperCustomAction** ppCustomAction
+    __out CWixBootstrapperBAFuntion** ppBAFuntion
     )
 {
     HRESULT hr = S_OK;
@@ -234,13 +253,13 @@ extern "C" HRESULT WINAPI CreateBootstrapperCustomAction(
     // This is required to enable logging functions
     BalInitialize(pEngine);
 
-    CWixBootstrapperCustomAction* pCustomAction = NULL;
+    CWixBootstrapperBAFuntion* pBAFuntion = NULL;
 
-    pCustomAction = new CWixBootstrapperCustomAction(pEngine, hModule);
-    ExitOnNull(pCustomAction, hr, E_OUTOFMEMORY, "Failed to create new bootstrapper custom action object.");
+    pBAFuntion = new CWixBootstrapperBAFuntion(pEngine, hModule);
+    ExitOnNull(pBAFuntion, hr, E_OUTOFMEMORY, "Failed to create new bootstrapper BA function object.");
 
-    *ppCustomAction = pCustomAction;
-    pCustomAction = NULL;
+    *ppBAFuntion = pBAFuntion;
+    pBAFuntion = NULL;
 
 LExit:
     return hr;

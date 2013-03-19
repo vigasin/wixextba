@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="WixBootstrapperCustomAction.h" company="X2 Systems Limited">
+// <copyright file="WixBootstrapperBAFuntion.h" company="X2 Systems Limited">
 //   Copyright (c) 2013, X2 Systems Limited.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -11,18 +11,18 @@
 
 #include "IBootstrapperEngine.h"
 
-interface IWixBootstrapperCustomAction
+interface IWixBootstrapperBAFuntion
 {
 public:
-    virtual STDMETHODIMP OnDetectCustomAction() { return S_OK; };
-    virtual STDMETHODIMP OnDetectCompleteCustomAction() { return S_OK; };
-    virtual STDMETHODIMP OnPlanCustomAction() { return S_OK; };
-    virtual STDMETHODIMP OnPlanCompleteCustomAction() { return S_OK; };
+    virtual STDMETHODIMP OnDetectBAFuntion() { return S_OK; };
+    virtual STDMETHODIMP OnDetectCompleteBAFuntion() { return S_OK; };
+    virtual STDMETHODIMP OnPlanBAFuntion() { return S_OK; };
+    virtual STDMETHODIMP OnPlanCompleteBAFuntion() { return S_OK; };
 };
 
-extern "C" typedef HRESULT (WINAPI *PFN_BOOTSTRAPPER_CUSTOM_ACTION_CREATE)(
+extern "C" typedef HRESULT (WINAPI *PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE)(
     __in IBootstrapperEngine* pEngine,
     __in HMODULE hModule,
-    __out IWixBootstrapperCustomAction** ppCustomAction
+    __out IWixBootstrapperBAFuntion** ppBAFuntion
     );
 
