@@ -895,8 +895,13 @@ private: // privates
         if (sczUpdateUrl && *sczUpdateUrl)
         {
             BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update available, url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
-            pThis->m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
-            ThemeControlEnable(pThis->m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, TRUE);
+            // Show upgrade on install and modify pages
+            if (pThis->m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == pThis->m_dwCurrentPage || 
+                pThis->m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == pThis->m_dwCurrentPage)
+            {
+                pThis->m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
+                ThemeControlEnable(pThis->m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, TRUE);
+            }
         }
         else
         {
@@ -1637,12 +1642,6 @@ LExit:
             }
         }
 
-        // Disable the upgrade link by default
-        if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
-        {
-            ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, FALSE);
-        }
-
     LExit:
         ReleaseStr(sczLicenseFilename);
         ReleaseStr(sczLicenseDirectory);
@@ -1930,6 +1929,12 @@ LExit:
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_FAILURE_RESTART_BUTTON, fShowRestartButton);
                 }
 
+                // Hide the upgrade link
+                if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK))
+                {
+                    ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_UPGRADE_LINK, FALSE);
+                }
+
                 // Process each control for special handling in the new page.
                 THEME_PAGE* pPage = ThemeGetPage(m_pTheme, dwNewPageId);
                 if (pPage)
@@ -2005,6 +2010,9 @@ LExit:
 
                 ThemeShowPage(m_pTheme, dwOldPageId, SW_HIDE);
                 ThemeShowPage(m_pTheme, dwNewPageId, SW_SHOW);
+
+                // Remember current page
+                m_dwCurrentPage = dwNewPageId;
                
                 // On the install page set the focus to the install button or the next enabled control if install is disabled 
                 if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId) 
@@ -2673,6 +2681,7 @@ public:
         m_sczLanguage = NULL;
         m_pTheme = NULL;
         memset(m_rgdwPageIds, 0, sizeof(m_rgdwPageIds));
+        m_dwCurrentPage = 0;
         m_hUiThread = NULL;
         m_fRegistered = FALSE;
         m_hWnd = NULL;
@@ -2759,6 +2768,7 @@ private:
     LPWSTR m_sczLanguage;
     THEME* m_pTheme;
     DWORD m_rgdwPageIds[countof(vrgwzPageNames)];
+    DWORD m_dwCurrentPage;
     HANDLE m_hUiThread;
     BOOL m_fRegistered;
     HWND m_hWnd;

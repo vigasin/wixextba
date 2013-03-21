@@ -8,12 +8,6 @@ md obj 1>nul 2>nul
 echo Building examples...
 
 Call :build Setup msi
-Call :build Bundle11 exe
-Call :build Setup msi
-Call :build Bundle10 exe
-Call :build Setup msi
-Call :build Bundle9 exe
-Call :build Setup msi
 Call :build Bundle1 exe
 Call :build Setup msi
 Call :build Bundle2 exe
@@ -29,6 +23,12 @@ Call :build Setup msi
 Call :build Bundle7 exe
 Call :build Setup msi
 Call :build Bundle8 exe
+Call :build Setup msi
+Call :build Bundle9 exe
+Call :build Setup msi
+Call :build Bundle11 exe
+Call :build Setup msi
+Call :build Bundle10 exe
 
 echo.
 echo Build complete

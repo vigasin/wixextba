@@ -7,6 +7,9 @@
   <Font Id="3" Height="-12" Weight="500" Foreground="000000" Background="FFFFFF">Segoe UI</Font>
   <Font Id="4" Height="-12" Weight="500" Foreground="ff0000" Background="FFFFFF" Underline="yes">Segoe UI</Font>
 
+  <!-- Upgrade shown on install and modify pages so reference globally -->
+  <Hypertext Name="UpgradeHyperlink" X="185" Y="-81" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallUpgradeLinkText)</Hypertext>
+  
   <Page Name="Help">
     <Text X="80" Y="11" Width="-11" Height="32" FontId="1" DisablePrefix="yes">#(loc.Title)</Text>
     <Image X="11" Y="11" Width="64" Height="64" ImageFile="Logo.png"/>
@@ -21,7 +24,7 @@
     <Text X="185" Y="91" Width="-11" Height="64" FontId="3" DisablePrefix="yes">#(loc.InstallMessage)</Text><!-- HexStyle="0x800000" -->
     <Hypertext Name="EulaHyperlink" X="185" Y="-111" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallLicenseLinkText)</Hypertext>
     <Text X="185" Y="-81" Width="-11" Height="17" FontId="3" DisablePrefix="yes">#(loc.InstallVersion)</Text>
-    <Hypertext Name="UpgradeHyperlink" X="185" Y="-81" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallUpgradeLinkText)</Hypertext>
+    <!--<Hypertext Name="UpgradeHyperlink" X="185" Y="-81" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallUpgradeLinkText)</Hypertext>-->
     <Checkbox Name="EulaAcceptCheckbox" X="185" Y="-51" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallAcceptCheckbox)</Checkbox>
     <Button Name="OptionsButton" X="-171" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0" HideWhenDisabled="yes">#(loc.InstallOptionsButton)</Button>
     <Button Name="InstallButton" X="-91" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0">#(loc.InstallInstallButton)</Button>

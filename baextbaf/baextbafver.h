@@ -3,10 +3,10 @@
 #define _VERSION_FILE_H_
 
 #define szVerMajorMinor "1.0"
-#define szVerMajorMinorBuildRev "1.0.4827.39888"
+#define szVerMajorMinorBuildRev "1.0.4829.33704"
 #define rmj	1
 #define rmm	0
-#define rbd	4827
-#define rev	39888
+#define rbd	4829
+#define rev	33704
 
 #endif
