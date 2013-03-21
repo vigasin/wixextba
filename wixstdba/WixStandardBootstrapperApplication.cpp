@@ -758,8 +758,9 @@ public: // IBootstrapperApplication
         SetTaskbarButtonProgress(100); // show full progress bar, green, yellow, or red
 
         // If we successfully applied an update close the window since the new Bundle should be running now.
-        if (SUCCEEDED(hrStatus) && m_fUpdate)
+        if (SUCCEEDED(hrStatus) && m_fUpdating)
         {
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update downloaded, close bundle.");
             ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
         }
 
@@ -868,8 +869,6 @@ private: // privates
         LPWSTR sczUpdateUrl = NULL;
         DWORD64 qwSize = 0;
 
-        pThis->m_fUpdate = FALSE;
-
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Checking for update.");
 
         // Load the update XML from a location url and parse it for an update.
@@ -891,11 +890,9 @@ private: // privates
             BalExitOnFailure(hr, "Failed to get url attribute.");
 
             hr = XmlGetAttributeLargeNumber(pNode, L"Size", &qwSize);
-
-            pThis->m_fUpdate = (sczUpdateUrl && *sczUpdateUrl);
         }
 
-        if (pThis->m_fUpdate)
+        if (sczUpdateUrl && *sczUpdateUrl)
         {
             BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Update available, url: %ls; size: %I64u.", sczUpdateUrl, qwSize);
             pThis->m_pEngine->SetUpdate(NULL, sczUpdateUrl, qwSize, BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE, NULL, 0);
@@ -2015,7 +2012,6 @@ LExit:
                     HWND hwndFocus = ::GetDlgItem(m_pTheme->hwndParent, WIXSTDBA_CONTROL_INSTALL_BUTTON); 
                     if (hwndFocus && !ThemeControlEnabled(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON)) 
                     { 
-                        //hwndFocus = ::GetDlgItem(m_pTheme->hwndParent, WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON); 
                         hwndFocus = ::GetNextDlgTabItem(m_pTheme->hwndParent, hwndFocus, FALSE); 
                     }
 
@@ -2254,6 +2250,9 @@ LExit:
     void OnClickUpgradeLink()
     {
         this->OnPlan(BOOTSTRAPPER_ACTION_UPDATE_REPLACE);
+
+        m_fUpdating = TRUE;
+
         return;
     }
 
@@ -2703,7 +2702,7 @@ public:
         m_fPrereqInstalled = FALSE;
         m_fPrereqAlreadyInstalled = FALSE;
 
-        m_fUpdate = FALSE;
+        m_fUpdating = FALSE;
 
         pEngine->AddRef();
         m_pEngine = pEngine;
@@ -2794,7 +2793,7 @@ private:
     BOOL m_fTaskbarButtonOK;
     BOOL m_fShowingInternalUiThisPackage;
 
-    BOOL m_fUpdate;
+    BOOL m_fUpdating;
     LPCWSTR m_wzUpdateLocation;
 
     HMODULE m_hCAModule;
