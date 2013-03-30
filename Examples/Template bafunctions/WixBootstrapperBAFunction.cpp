@@ -30,11 +30,43 @@ public:
 
 
 /*
-    STDMETHODIMP OnPlanBAFuntion()
+    STDMETHODIMP OnDetectCompleteBAFuntion()
+    {
+        HRESULT hr = S_OK;
+
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running detect complete BA function");
+
+        //-------------------------------------------------------------------------------------------------
+        // YOUR CODE GOES HERE
+        BalExitOnFailure(hr, "Dummy.");
+        //-------------------------------------------------------------------------------------------------
+
+    LExit:
+        return hr;
+    }
+
+    
+        STDMETHODIMP OnPlanBAFuntion()
     {
         HRESULT hr = S_OK;
 
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan BA function");
+
+        //-------------------------------------------------------------------------------------------------
+        // YOUR CODE GOES HERE
+        BalExitOnFailure(hr, "Dummy.");
+        //-------------------------------------------------------------------------------------------------
+
+    LExit:
+        return hr;
+    }
+
+    
+    STDMETHODIMP OnPlanCompleteBAFuntion()
+    {
+        HRESULT hr = S_OK;
+
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Running plan complete BA function");
 
         //-------------------------------------------------------------------------------------------------
         // YOUR CODE GOES HERE

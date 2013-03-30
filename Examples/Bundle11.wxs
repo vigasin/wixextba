@@ -18,8 +18,8 @@
     <Variable Name="DelayStart" Type="numeric" Value="1000" />
 
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
-      <!-- Note: the name attibute must be "baextbaf.dll" but the source can be anything -->
-      <Payload Name="baextbaf.dll" Compressed="yes" SourceFile="baextbaf.dll" />
+      <!-- Note: the name attibute must be "bafunctions.dll" but the source can be anything -->
+      <Payload Name="bafunctions.dll" Compressed="yes" SourceFile="bafunctions.dll" />
       <Payload SourceFile="Resource\LogoSide.png" />
       <Payload SourceFile="Resource\Logo.png" />
       <Payload Name="1031\thm.wxl" Compressed="yes" SourceFile="Resource\1031\HyperlinkTheme.wxl" />

@@ -45,11 +45,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             }
 
                             // Build = days since 1/1/2000; Revision = seconds since midnight / 2
-                            var now = DateTime.Now.ToUniversalTime();
-                            var build = (now - new DateTime(2000, 1, 1)).TotalDays;
-                            var revision = now.TimeOfDay.TotalSeconds / 2;
+                            DateTime now = DateTime.Now.ToUniversalTime();
+                            double build = (now - new DateTime(2000, 1, 1)).TotalDays;
+                            double revision = now.TimeOfDay.TotalSeconds / 2;
 
-                            result = args[0] + "." + (int)build + "." + (int)(revision);
+                            result = String.Format("{0}.{1}.{2}", args[0], (int)build, (int)revision);
 
                             break;
                     }

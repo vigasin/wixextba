@@ -1968,7 +1968,7 @@ LExit:
                                 // If the control value isn't set then disable it.
                                 if (!SUCCEEDED(hr))
                                 {
-                                    ThemeControlEnable(m_pTheme, pControl->wId, false);
+                                    ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
                                 }
                                 else
                                 {
@@ -1977,21 +1977,23 @@ LExit:
                             }
 
                             // Hide or disable controls based on the control name with 'State' appended
-                            StrAllocFormatted(&sczControlName, L"%lsState", pControl->sczName);
-                            HRESULT hr = BalGetStringVariable(sczControlName, &sczControlState);
-                            if (SUCCEEDED(hr) && sczControlState && *sczControlState)
+                            HRESULT hr = StrAllocFormatted(&sczControlName, L"%lsState", pControl->sczName);
+                            if (SUCCEEDED(hr))
                             {
-                                if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"disable", -1))
+                                hr = BalGetStringVariable(sczControlName, &sczControlState);
+                                if (SUCCEEDED(hr) && sczControlState && *sczControlState)
                                 {
-                                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Disable control %ls", pControl->sczName);
-                                    ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
-                                }
-
-                                if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"hide", -1))
-                                {
-                                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Hide control %ls", pControl->sczName);
-                                    // TODO: This doesn't work
-                                    ThemeShowControl(m_pTheme, pControl->wId, SW_HIDE);
+                                    if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"disable", -1))
+                                    {
+                                        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Disable control %ls", pControl->sczName);
+                                        ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
+                                    }
+                                    else if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"hide", -1))
+                                    {
+                                        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Hide control %ls", pControl->sczName);
+                                        // TODO: This doesn't work
+                                        ThemeShowControl(m_pTheme, pControl->wId, SW_HIDE);
+                                    }
                                 }
                             }
                         }
@@ -2475,7 +2477,6 @@ LExit:
         HRESULT hr = S_OK;
         BOOL fResult = FALSE;
 
-
         for (DWORD i = 0; i < m_Conditions.cConditions; ++i)
         {
             BAL_CONDITION* pCondition = m_Conditions.rgConditions + i;
@@ -2587,20 +2588,20 @@ LExit:
     HRESULT LoadBootstrapperBAFuntion()
     {
         HRESULT hr = S_OK;
-        LPWSTR sczBaExtBafPath = NULL;
+        LPWSTR sczBafPath = NULL;
 
-        hr = PathRelativeToModule(&sczBaExtBafPath, L"baextbaf.dll", m_hModule); 
+        hr = PathRelativeToModule(&sczBafPath, L"bafunctions.dll", m_hModule); 
         BalExitOnFailure(hr, "Failed to get path to BA function DLL.");
 
 #ifdef DEBUG
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFuntion() - BA function DLL '%ls'", sczBaExtBafPath);
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFuntion() - BA function DLL '%ls'", sczBafPath);
 #endif
         
-        m_hCAModule = ::LoadLibraryW(sczBaExtBafPath);
+        m_hCAModule = ::LoadLibraryW(sczBafPath);
         if (m_hCAModule)
         {
             PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE pfnBAFuntionCreate = reinterpret_cast<PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE>(::GetProcAddress(m_hCAModule, "CreateBootstrapperBAFuntion"));
-            BalExitOnNullWithLastError1(pfnBAFuntionCreate, hr, "Failed to get CreateBootstrapperBAFuntion entry-point from: %ls", sczBaExtBafPath);
+            BalExitOnNullWithLastError1(pfnBAFuntionCreate, hr, "Failed to get CreateBootstrapperBAFuntion entry-point from: %ls", sczBafPath);
 
             hr = pfnBAFuntionCreate(m_pEngine, m_hCAModule, &m_pBAFuntion);
             BalExitOnFailure(hr, "Failed to create BA function.");
@@ -2608,7 +2609,7 @@ LExit:
 #ifdef DEBUG
         else
         {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFuntion() - Failed to load DLL '%ls'", sczBaExtBafPath);
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFuntion() - Failed to load DLL '%ls'", sczBafPath);
         }
 #endif
 
@@ -2617,7 +2618,7 @@ LExit:
         {
             ::FreeLibrary(m_hCAModule);
         }
-        ReleaseStr(sczBaExtBafPath);    
+        ReleaseStr(sczBafPath);    
         
         return hr;
     }

@@ -13,8 +13,8 @@
     AboutUrl="http://wixtoolset.org">
 
     <BootstrapperApplicationRef Id="WixExtendedBootstrapperApplication.HyperlinkLicense">
-      <!-- Note: the name attibute must be "baextbaf.dll" but the source can be anything -->
-      <Payload Name="baextbaf.dll" Compressed="yes" SourceFile="baextbaf.dll" />
+      <!-- Note: the name attibute must be "bafunctions.dll" but the source can be anything -->
+      <Payload Name="bafunctions.dll" Compressed="yes" SourceFile="bafunctions.dll" />
       <Payload SourceFile="Resource\LogoSide.png" />
       <Payload SourceFile="Resource\Logo.png" />
     </BootstrapperApplicationRef>
