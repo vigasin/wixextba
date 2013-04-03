@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="WixBootstrapperBAFuntion.cpp" company="Outercurve Foundation">
+// <copyright file="WixBootstrapperBAFunction.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -10,10 +10,10 @@
 
 #include "precomp.h"
 
-class CWixBootstrapperBAFuntion : IWixBootstrapperBAFuntion
+class CWixBootstrapperBAFunction : IBootstrapperBAFunction
 {
 public:
-    STDMETHODIMP OnDetectBAFuntion()
+    STDMETHODIMP OnDetect()
     {
         HRESULT hr = S_OK;
 
@@ -21,7 +21,7 @@ public:
 
         //-------------------------------------------------------------------------------------------------
         // YOUR CODE GOES HERE
-        BalExitOnFailure(hr, "Dummy.");
+        BalExitOnFailure(hr, "Change this message to represent real error handling.");
         //-------------------------------------------------------------------------------------------------
 
     LExit:
@@ -29,8 +29,12 @@ public:
     }
 
 
+    STDMETHODIMP OnDetectComplete() { return S_OK; }
+    STDMETHODIMP OnPlan() { return S_OK; }
+    STDMETHODIMP OnPlanComplete() { return S_OK; }
+
 /*
-    STDMETHODIMP OnDetectCompleteBAFuntion()
+    STDMETHODIMP OnDetectComplete()
     {
         HRESULT hr = S_OK;
 
@@ -38,15 +42,15 @@ public:
 
         //-------------------------------------------------------------------------------------------------
         // YOUR CODE GOES HERE
-        BalExitOnFailure(hr, "Dummy.");
+        BalExitOnFailure(hr, "Change this message to represent real error handling.");
         //-------------------------------------------------------------------------------------------------
 
     LExit:
         return hr;
     }
 
-    
-        STDMETHODIMP OnPlanBAFuntion()
+
+    STDMETHODIMP OnPlan()
     {
         HRESULT hr = S_OK;
 
@@ -54,7 +58,7 @@ public:
 
         //-------------------------------------------------------------------------------------------------
         // YOUR CODE GOES HERE
-        BalExitOnFailure(hr, "Dummy.");
+        BalExitOnFailure(hr, "Change this message to represent real error handling.");
         //-------------------------------------------------------------------------------------------------
 
     LExit:
@@ -62,7 +66,7 @@ public:
     }
 
     
-    STDMETHODIMP OnPlanCompleteBAFuntion()
+    STDMETHODIMP OnPlanComplete()
     {
         HRESULT hr = S_OK;
 
@@ -70,7 +74,7 @@ public:
 
         //-------------------------------------------------------------------------------------------------
         // YOUR CODE GOES HERE
-        BalExitOnFailure(hr, "Dummy.");
+        BalExitOnFailure(hr, "Change this message to represent real error handling.");
         //-------------------------------------------------------------------------------------------------
 
     LExit:
@@ -88,7 +92,7 @@ public:
     //
     // Constructor - initialize member variables.
     //
-    CWixBootstrapperBAFuntion(
+    CWixBootstrapperBAFunction(
         __in IBootstrapperEngine* pEngine,
         __in HMODULE hModule
         )
@@ -100,31 +104,31 @@ public:
     //
     // Destructor - release member variables.
     //
-    ~CWixBootstrapperBAFuntion()
+    ~CWixBootstrapperBAFunction()
     {
     }
 };
 
 
-extern "C" HRESULT WINAPI CreateBootstrapperBAFuntion(
+extern "C" HRESULT WINAPI CreateBootstrapperBAFunction(
     __in IBootstrapperEngine* pEngine,
     __in HMODULE hModule,
-    __out CWixBootstrapperBAFuntion** ppBAFuntion
+    __out CWixBootstrapperBAFunction** ppBAFunction
     )
 {
     HRESULT hr = S_OK;
+    CWixBootstrapperBAFunction* pBAFunction = NULL;
 
     // This is required to enable logging functions
     BalInitialize(pEngine);
 
-    CWixBootstrapperBAFuntion* pBAFuntion = NULL;
+    pBAFunction = new CWixBootstrapperBAFunction(pEngine, hModule);
+    ExitOnNull(pBAFunction, hr, E_OUTOFMEMORY, "Failed to create new bootstrapper BA function object.");
 
-    pBAFuntion = new CWixBootstrapperBAFuntion(pEngine, hModule);
-    ExitOnNull(pBAFuntion, hr, E_OUTOFMEMORY, "Failed to create new bootstrapper BA function object.");
-
-    *ppBAFuntion = pBAFuntion;
-    pBAFuntion = NULL;
+    *ppBAFunction = pBAFunction;
+    pBAFunction = NULL;
 
 LExit:
+    delete pBAFunction;
     return hr;
 }

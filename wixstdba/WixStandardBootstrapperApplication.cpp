@@ -318,10 +318,9 @@ public: // IBootstrapperApplication
         __in HRESULT hrStatus
         )
     {
-        // Call the detect complete BA function
-        if (SUCCEEDED(hrStatus) && m_pBAFuntion)
+        if (SUCCEEDED(hrStatus) && m_pBAFunction)
         {
-            m_pBAFuntion->OnDetectCompleteBAFuntion();
+            m_pBAFunction->OnDetectComplete();
         }
 
         if (SUCCEEDED(hrStatus))
@@ -406,9 +405,9 @@ public: // IBootstrapperApplication
         __in HRESULT hrStatus
         )
     {
-        if (SUCCEEDED(hrStatus) && m_pBAFuntion)
+        if (SUCCEEDED(hrStatus) && m_pBAFunction)
         {
-            m_pBAFuntion->OnPlanCompleteBAFuntion();
+            m_pBAFunction->OnPlanComplete();
         }
 
         SetState(WIXSTDBA_STATE_PLANNED, hrStatus);
@@ -949,6 +948,8 @@ LExit:
 
         hr = BalConditionsParseFromXml(&m_Conditions, pixdManifest, m_pWixLoc);
         BalExitOnFailure(hr, "Failed to load conditions from XML.");
+
+        LoadBootstrapperBAFunctions();
 
         hr = ParseBootrapperApplicationDataFromXml(pixdManifest);
         BalExitOnFailure(hr, "Failed to read bootstrapper application data.");
@@ -1660,7 +1661,7 @@ LExit:
     {
         SetState(WIXSTDBA_STATE_HELP, S_OK);
 
-        // If not form not visible and it should be displayed show it here and hide splash screen 
+        // If the UI should be visible, display it now and hide the splash screen
         if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
         { 
             ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
@@ -1679,16 +1680,15 @@ LExit:
     {
         HRESULT hr = S_OK;
 
-        // Call the detect BA function
-        if (m_pBAFuntion)
+        if (m_pBAFunction)
         {
-            hr = m_pBAFuntion->OnDetectBAFuntion();
+            hr = m_pBAFunction->OnDetect();
             BalExitOnFailure(hr, "Failed calling detect BA function.");
         }
 
         SetState(WIXSTDBA_STATE_DETECTING, hr);
 
-        // If not form not visible and it should be displayed show it here and hide splash screen 
+        // If the UI should be visible, display it now and hide the splash screen
         if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
         { 
             ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
@@ -1737,9 +1737,9 @@ LExit:
 
         SetState(WIXSTDBA_STATE_PLANNING, hr);
 
-        if (m_pBAFuntion)
+        if (m_pBAFunction)
         {
-            m_pBAFuntion->OnPlanBAFuntion();
+            m_pBAFunction->OnPlan();
         }
 
         hr = m_pEngine->Plan(action);
@@ -2585,7 +2585,7 @@ LExit:
     }
 
 
-    HRESULT LoadBootstrapperBAFuntion()
+    HRESULT LoadBootstrapperBAFunctions()
     {
         HRESULT hr = S_OK;
         LPWSTR sczBafPath = NULL;
@@ -2594,29 +2594,30 @@ LExit:
         BalExitOnFailure(hr, "Failed to get path to BA function DLL.");
 
 #ifdef DEBUG
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFuntion() - BA function DLL '%ls'", sczBafPath);
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFunctions() - BA function DLL '%ls'", sczBafPath);
 #endif
         
-        m_hCAModule = ::LoadLibraryW(sczBafPath);
-        if (m_hCAModule)
+        m_hBAFModule = ::LoadLibraryW(sczBafPath);
+        if (m_hBAFModule)
         {
-            PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE pfnBAFuntionCreate = reinterpret_cast<PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE>(::GetProcAddress(m_hCAModule, "CreateBootstrapperBAFuntion"));
-            BalExitOnNullWithLastError1(pfnBAFuntionCreate, hr, "Failed to get CreateBootstrapperBAFuntion entry-point from: %ls", sczBafPath);
+            PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE pfnBAFunctionCreate = reinterpret_cast<PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE>(::GetProcAddress(m_hBAFModule, "CreateBootstrapperBAFunction"));
+            BalExitOnNullWithLastError1(pfnBAFunctionCreate, hr, "Failed to get CreateBootstrapperBAFunction entry-point from: %ls", sczBafPath);
 
-            hr = pfnBAFuntionCreate(m_pEngine, m_hCAModule, &m_pBAFuntion);
+            hr = pfnBAFunctionCreate(m_pEngine, m_hBAFModule, &m_pBAFunction);
             BalExitOnFailure(hr, "Failed to create BA function.");
         }
 #ifdef DEBUG
         else
         {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXEXTBA: LoadBootstrapperBAFuntion() - Failed to load DLL '%ls'", sczBafPath);
+            BalLogError(HRESULT_FROM_WIN32(::GetLastError()), "WIXEXTBA: LoadBootstrapperBAFunctions() - Failed to load DLL %ls", sczBafPath);
         }
 #endif
 
     LExit:
-        if ((NULL == m_pBAFuntion) && m_hCAModule)
+        if (m_hBAFModule && !m_pBAFunction)
         {
-            ::FreeLibrary(m_hCAModule);
+            ::FreeLibrary(m_hBAFModule);
+            m_hBAFModule = NULL;
         }
         ReleaseStr(sczBafPath);    
         
@@ -2717,9 +2718,8 @@ public:
         pEngine->AddRef();
         m_pEngine = pEngine;
 
-        m_hCAModule = NULL;
-        m_pBAFuntion = NULL;
-        LoadBootstrapperBAFuntion();
+        m_hBAFModule = NULL;
+        m_pBAFunction = NULL;
     }
 
 
@@ -2746,9 +2746,10 @@ public:
         ReleaseStr(m_sczAfterForcedRestartPackage);
         ReleaseNullObject(m_pEngine);
 
-        if (m_hCAModule)
+        if (m_hBAFModule)
         {
-            ::FreeLibrary(m_hCAModule);
+            ::FreeLibrary(m_hBAFModule);
+            m_hBAFModule = NULL;
         }
     }
 
@@ -2807,8 +2808,8 @@ private:
     BOOL m_fUpdating;
     LPCWSTR m_wzUpdateLocation;
 
-    HMODULE m_hCAModule;
-    IWixBootstrapperBAFuntion* m_pBAFuntion;
+    HMODULE m_hBAFModule;
+    IBootstrapperBAFunction* m_pBAFunction;
 };
 
 

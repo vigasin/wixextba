@@ -52,5 +52,5 @@ HRESULT CreateBootstrapperApplication(
     __out IBootstrapperApplication** ppApplication
     );
 
-#include "..\bafunctions\WixBootstrapperBAFunction.h"
+#include "..\bafunctions\IBootstrapperBAFunction.h"
 
