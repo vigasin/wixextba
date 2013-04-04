@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="baextbaf.rc" company="Outercurve Foundation">
+// <copyright file="bafunctions.rc" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -13,13 +13,13 @@
 
 #include <winver.h>
 #include <windows.h>
-#include "baextbafver.h"
+#include "bafunctionsver.h"
 
 #define VER_APP
-#define VER_ORIGINAL_FILENAME "baextbaf.dll"
-#define VER_INTERNAL_NAME "baextbaf"
-#define VER_PRODUCT_NAME "WiX Extendend Bootstrapper BA function"
-#define VER_FILE_DESCRIPTION "WiX Extendend Bootstrapper BA function"
+#define VER_ORIGINAL_FILENAME "bafunctions.dll"
+#define VER_INTERNAL_NAME "bafunctions"
+#define VER_PRODUCT_NAME "WiX Bootstrapper functions"
+#define VER_FILE_DESCRIPTION "WiX Bootstrapper functions"
 
 #ifdef DEBUG
     #define VER_DEBUG                VS_FF_DEBUG

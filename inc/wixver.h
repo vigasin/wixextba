@@ -3,11 +3,11 @@
 #define _VERSION_FILE_H_
 
 #define szVerMajorMinor "3.7"
-#define szVerMajorMinorBuildRev "3.7.4842.38818"
+#define szVerMajorMinorBuildRev "3.7.4843.38971"
 #define rmj	3
 #define rmm	7
-#define rbd	4842
-#define rev	38818
+#define rbd	4843
+#define rev	38971
 #define szVerName	"BalExtensionExt Release"
 
 #endif

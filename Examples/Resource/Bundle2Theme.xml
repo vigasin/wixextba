@@ -39,7 +39,7 @@
     <Button Name="BrowseButton" X="-11" Y="142" Width="75" Height="23" TabStop="yes" FontId="3">#(loc.OptionsBrowseButton)</Button>
     <Text X="11" Y="171" Width="-11" Height="17" FontId="3">#(loc.OptionsLocationLabel2)</Text>
     <Editbox Name="FolderEditbox2" X="11" Y="193" Width="-91" Height="21" TabStop="yes" FontId="3" FileSystemAutoComplete="yes" />
-    <Button Name="BrowseButton2" X="-11" Y="192" Width="75" Height="23" TabStop="yes" FontId="3">#(loc.OptionsBrowseButton2)</Button>
+    <Button Name="BrowseButton2" X="-11" Y="192" Width="75" Height="23" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.OptionsBrowseButton2)</Button>
 
     <Text X="11" Y="221" Width="-11" Height="17" FontId="3">Select option</Text>
     <Button Name="RadioButton1" X="11" Y="241" Width="-11" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="no" HexStyle="0x000009">Option 1</Button>
