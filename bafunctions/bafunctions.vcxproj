@@ -125,7 +125,7 @@
   <ItemGroup>
     <ClInclude Include="precomp.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="WixBootstrapperBAFunction.h" />
+    <ClInclude Include="IBootstrapperBAFunction.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

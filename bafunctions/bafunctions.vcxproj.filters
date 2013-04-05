@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="baextbaf.cpp">
+    <ClCompile Include="bafunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WixBootstrapperBAFunction.cpp">
@@ -23,7 +23,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="baextbaf.def">
+    <None Include="bafunctions.def">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
@@ -34,12 +34,12 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WixBootstrapperBAFunction.h">
+    <ClInclude Include="IBootstrapperBAFunction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="baextbaf.rc">
+    <ResourceCompile Include="bafunctions.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
