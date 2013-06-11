@@ -934,6 +934,13 @@ LExit:
         hr = ProcessCommandLine(&m_sczLanguage);
         ExitOnFailure(hr, "Unknown commandline parameters.");
 
+        // Override default language to correctly support UK English (this is not required in WiX 3.8)
+        if (!(m_sczLanguage && *m_sczLanguage)) 
+        { 
+            hr = StrAllocFormatted(&m_sczLanguage, L"%u", ::GetUserDefaultLangID()); 
+            BalExitOnFailure(hr, "Failed to set language."); 
+        }
+
         hr = PathRelativeToModule(&sczModulePath, NULL, m_hModule);
         BalExitOnFailure(hr, "Failed to get module path.");
 
@@ -2228,7 +2235,6 @@ LExit:
         LPWSTR sczLicenseUrl = NULL;
         LPWSTR sczLicensePath = NULL;
         LPWSTR sczLicenseDirectory = NULL;
-        LPWSTR sczLicenseFilename = NULL;
         URI_PROTOCOL protocol = URI_PROTOCOL_UNKNOWN;
 
         hr = StrAllocString(&sczLicenseUrl, m_sczLicenseUrl, 0);
@@ -2250,14 +2256,10 @@ LExit:
                 hr = PathGetDirectory(sczLicensePath, &sczLicenseDirectory);
                 if (SUCCEEDED(hr))
                 {
-                    hr = StrAllocString(&sczLicenseFilename, PathFile(sczLicenseUrl), 0);
-                    if (SUCCEEDED(hr))
-                    {
-                        hr = LocProbeForFile(sczLicenseDirectory, sczLicenseFilename, m_sczLanguage, &sczLicensePath);
+                    hr = LocProbeForFile(sczLicenseDirectory, PathFile(sczLicenseUrl), m_sczLanguage, &sczLicensePath);
                     }
         		}
             }
-        }
 
         hr = ShelExec(sczLicensePath ? sczLicensePath : sczLicenseUrl, NULL, L"open", NULL, SW_SHOWDEFAULT, m_hWnd, NULL);
         BalExitOnFailure(hr, "Failed to launch URL to EULA.");
@@ -2266,7 +2268,6 @@ LExit:
         ReleaseStr(sczLicensePath);
         ReleaseStr(sczLicenseUrl);
         ReleaseStr(sczLicenseDirectory);
-        ReleaseStr(sczLicenseFilename);
 
         return;
     }
