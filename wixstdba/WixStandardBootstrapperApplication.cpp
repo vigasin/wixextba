@@ -94,6 +94,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EULA_LINK,
     WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX,
     WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON,
+    WIXSTDBA_CONTROL_VERSION_LABEL,
     WIXSTDBA_CONTROL_UPGRADE_LINK,
 
     // Options page
@@ -117,6 +118,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT,
+    WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT,
 
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR,
@@ -151,6 +153,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EULA_LINK, L"EulaHyperlink" },
     { WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX, L"EulaAcceptCheckbox" },
     { WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON, L"WelcomeCancelButton" },
+    { WIXSTDBA_CONTROL_VERSION_LABEL, L"InstallVersion" },
     { WIXSTDBA_CONTROL_UPGRADE_LINK, L"UpgradeHyperlink" },
 
     { WIXSTDBA_CONTROL_FOLDER_EDITBOX, L"FolderEditbox" },
@@ -170,6 +173,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"ExecuteProgressPackageText" },
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR, L"ExecuteProgressbar" },
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT, L"ExecuteProgressText" },
+    { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"ExecuteProgressActionDataText"},
     { WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"OverallProgressPackageText" },
     { WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR, L"OverallProgressbar" },
     { WIXSTDBA_CONTROL_OVERALL_CALCULATED_PROGRESS_BAR, L"OverallCalculatedProgressbar" },
@@ -252,14 +256,16 @@ public: // IBootstrapperApplication
 
 
     virtual STDMETHODIMP_(int) OnDetectRelatedBundle(
-        __in LPCWSTR /*wzBundleId*/,
-        __in BOOTSTRAPPER_RELATION_TYPE /*relationType*/,
+        __in LPCWSTR wzBundleId,
+        __in BOOTSTRAPPER_RELATION_TYPE relationType,
         __in LPCWSTR /*wzBundleTag*/,
-        __in BOOL /*fPerMachine*/,
+        __in BOOL fPerMachine,
         __in DWORD64 /*dw64Version*/,
         __in BOOTSTRAPPER_RELATED_OPERATION operation
         )
     {
+        BalInfoAddRelatedBundleAsPackage(&m_Bundle.packages, wzBundleId, relationType, fPerMachine);
+
         // If we're not doing a pre-req install, remember when our bundle would cause a downgrade.
         if (!m_sczPrereqPackage && BOOTSTRAPPER_RELATED_OPERATION_DOWNGRADE == operation)
         {
@@ -435,7 +441,12 @@ public: // IBootstrapperApplication
             LPCWSTR wz = (SUCCEEDED(hr) && pPackage->sczDisplayName) ? pPackage->sczDisplayName : wzPackageId;
 
             ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_CACHE_PROGRESS_PACKAGE_TEXT, wz);
-            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, wz);
+
+            // If something started executing, leave it in the overall progress text.
+            if (!m_fStartedExecution)
+            {
+            	ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, wz);
+        	}
         }
 
         return __super::OnCachePackageBegin(wzPackageId, cCachePayloads, dw64PackageCacheSize);
@@ -568,6 +579,34 @@ public: // IBootstrapperApplication
     }
 
 
+    virtual STDMETHODIMP_(int) OnExecuteMsiMessage(
+        __in_z LPCWSTR wzPackageId,
+        __in INSTALLMESSAGE mt,
+        __in UINT uiFlags,
+        __in_z LPCWSTR wzMessage,
+        __in DWORD cData,
+        __in_ecount_z_opt(cData) LPCWSTR* rgwzData,
+        __in int nRecommendation
+        )
+    {
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnExecuteMsiMessage() - package: %ls, message: %ls", wzPackageId, wzMessage);
+#endif
+        if (BOOTSTRAPPER_DISPLAY_FULL == m_command.display && (INSTALLMESSAGE_WARNING == mt || INSTALLMESSAGE_USER == mt))
+        {
+            int nResult = ::MessageBoxW(m_hWnd, wzMessage, m_pTheme->sczCaption, uiFlags);
+            return nResult;
+        }
+
+        if (INSTALLMESSAGE_ACTIONSTART == mt)
+        {
+            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, wzMessage);
+        }
+
+        return __super::OnExecuteMsiMessage(wzPackageId, mt, uiFlags, wzMessage, cData, rgwzData, nRecommendation);
+    }
+
+
     virtual STDMETHODIMP_(int) OnProgress(
         __in DWORD dwProgressPercentage,
         __in DWORD dwOverallProgressPercentage
@@ -594,11 +633,43 @@ public: // IBootstrapperApplication
         __in BOOL fExecute
         )
     {
+        LPWSTR sczFormattedString = NULL;
+
+        m_fStartedExecution = TRUE;
+
         if (wzPackageId && *wzPackageId)
         {
             BAL_INFO_PACKAGE* pPackage = NULL;
             BalInfoFindPackageById(&m_Bundle.packages, wzPackageId, &pPackage);
-            LPCWSTR wz = (pPackage && pPackage->sczDisplayName) ? pPackage->sczDisplayName : wzPackageId;
+
+            LPCWSTR wz = wzPackageId;
+            if (pPackage)
+            {
+                LOC_STRING* pLocString = NULL;
+
+                switch (pPackage->type)
+                {
+                case BAL_INFO_PACKAGE_TYPE_BUNDLE_ADDON:
+                    LocGetString(m_pWixLoc, L"#(loc.ExecuteAddonRelatedBundleMessage)", &pLocString);
+                    break;
+
+                case BAL_INFO_PACKAGE_TYPE_BUNDLE_PATCH:
+                    LocGetString(m_pWixLoc, L"#(loc.ExecutePatchRelatedBundleMessage)", &pLocString);
+                    break;
+
+                case BAL_INFO_PACKAGE_TYPE_BUNDLE_UPGRADE:
+                    LocGetString(m_pWixLoc, L"#(loc.ExecuteUpgradeRelatedBundleMessage)", &pLocString);
+                    break;
+                }
+
+                if (pLocString)
+                {
+                    BalFormatString(pLocString->wzText, &sczFormattedString);
+                }
+
+                wz = sczFormattedString ? sczFormattedString : pPackage->sczDisplayName ? pPackage->sczDisplayName : wzPackageId;
+            }
+
             m_fShowingInternalUiThisPackage = pPackage && pPackage->fDisplayInternalUI;
 
             ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, wz);
@@ -609,6 +680,7 @@ public: // IBootstrapperApplication
             m_fShowingInternalUiThisPackage = FALSE;
         }
 
+        ReleaseStr(sczFormattedString);
         return __super::OnExecutePackageBegin(wzPackageId, fExecute);
     }
 
@@ -674,6 +746,7 @@ public: // IBootstrapperApplication
         )
     {
         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"");
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"");
         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"");
         ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_PROGRESS_CANCEL_BUTTON, FALSE); // no more cancel.
 
@@ -933,13 +1006,6 @@ LExit:
 
         hr = ProcessCommandLine(&m_sczLanguage);
         ExitOnFailure(hr, "Unknown commandline parameters.");
-
-        // Override default language to correctly support UK English (this is not required in WiX 3.8)
-        if (!(m_sczLanguage && *m_sczLanguage)) 
-        { 
-            hr = StrAllocFormatted(&m_sczLanguage, L"%u", ::GetUserDefaultLangID()); 
-            BalExitOnFailure(hr, "Failed to set language."); 
-        }
 
         hr = PathRelativeToModule(&sczModulePath, NULL, m_hModule);
         BalExitOnFailure(hr, "Failed to get module path.");
@@ -1275,6 +1341,17 @@ LExit:
             m_fSuppressRepair = 0 < dwBool;
         }
         BalExitOnFailure(hr, "Failed to get SuppressRepair value.");
+
+        hr = XmlGetAttributeNumber(pNode, L"ShowVersion", &dwBool);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        else if (SUCCEEDED(hr))
+        {
+            m_fShowVersion = 0 < dwBool;
+        }
+        BalExitOnFailure(hr, "Failed to get ShowVersion value.");
 
     LExit:
         ReleaseObject(pNode);
@@ -1854,6 +1931,12 @@ LExit:
                     // If there is an "Options" page, the "Options" button exists, and it hasn't been suppressed, then enable the button.
                     BOOL fOptionsEnabled = m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON) && !m_fSuppressOptionsUI;
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON, fOptionsEnabled);
+
+                    // Show/Hide the version label if it exists.
+                    if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL) && !m_fShowVersion)
+                    {
+                        ThemeShowControl(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL, SW_HIDE);
+                    }
                 }
                 else if (m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId)
                 {
@@ -2257,9 +2340,9 @@ LExit:
                 if (SUCCEEDED(hr))
                 {
                     hr = LocProbeForFile(sczLicenseDirectory, PathFile(sczLicenseUrl), m_sczLanguage, &sczLicensePath);
-                    }
-        		}
+                }
             }
+        }
 
         hr = ShelExec(sczLicensePath ? sczLicensePath : sczLicenseUrl, NULL, L"open", NULL, SW_SHOWDEFAULT, m_hWnd, NULL);
         BalExitOnFailure(hr, "Failed to launch URL to EULA.");
@@ -2324,10 +2407,10 @@ LExit:
         ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
 
     LExit:
-        ReleaseStr(sczLaunchTarget);
-        ReleaseStr(sczUnformattedLaunchTarget);
         ReleaseStr(sczArguments);
         ReleaseStr(sczUnformattedArguments);
+        ReleaseStr(sczLaunchTarget);
+        ReleaseStr(sczUnformattedLaunchTarget);
 
         return;
     }
@@ -2570,40 +2653,6 @@ LExit:
     }
 
 
-    void SavePageSettings(
-        __in WIXSTDBA_PAGE page
-        )
-    {
-        THEME_PAGE* pPage = NULL;
-
-        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[page]);
-        if (pPage)
-        {
-            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
-            {
-                // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable with that name to true or false.
-                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
-                if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
-                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
-                    pControl->sczName && *pControl->sczName))
-                {
-                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
-                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
-                }
-
-                // Loop through all the editbox controls with names and set a Burn variable with that name to the contents.
-                if (THEME_CONTROL_TYPE_EDITBOX == pControl->type && pControl->sczName && *pControl->sczName &&
-                    (WIXSTDBA_CONTROL_FOLDER_EDITBOX != pControl->wId && WIXSTDBA_CONTROL_FOLDER_EDITBOX2 != pControl->wId))
-                {
-                    LPWSTR sczValue = NULL;
-                    ThemeGetTextControl(m_pTheme, pControl->wId, &sczValue);
-                    m_pEngine->SetVariableString(pControl->sczName, sczValue);
-                }
-            }
-        }
-    }
-
-
     HRESULT LoadBootstrapperBAFunctions()
     {
         HRESULT hr = S_OK;
@@ -2641,6 +2690,40 @@ LExit:
         ReleaseStr(sczBafPath);    
         
         return hr;
+    }
+
+
+    void SavePageSettings(
+        __in WIXSTDBA_PAGE page
+        )
+    {
+        THEME_PAGE* pPage = NULL;
+
+        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[page]);
+        if (pPage)
+        {
+            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
+            {
+                // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable with that name to true or false.
+                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
+                if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
+                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
+                    pControl->sczName && *pControl->sczName))
+                {
+                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
+                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
+                }
+
+                // Loop through all the editbox controls with names and set a Burn variable with that name to the contents.
+                if (THEME_CONTROL_TYPE_EDITBOX == pControl->type && pControl->sczName && *pControl->sczName &&
+                    (WIXSTDBA_CONTROL_FOLDER_EDITBOX != pControl->wId && WIXSTDBA_CONTROL_FOLDER_EDITBOX2 != pControl->wId))
+                {
+                    LPWSTR sczValue = NULL;
+                    ThemeGetTextControl(m_pTheme, pControl->wId, &sczValue);
+                    m_pEngine->SetVariableString(pControl->sczName, sczValue);
+                }
+            }
+        }
     }
 
 
@@ -2720,6 +2803,7 @@ public:
         m_fSuppressOptionsUI = FALSE;
         m_fSuppressDowngradeFailure = FALSE;
         m_fSuppressRepair = FALSE;
+        m_fShowVersion = FALSE;
 
         m_sdOverridableVariables = NULL;
         m_pTaskbarList = NULL;
@@ -2798,6 +2882,7 @@ private:
     WIXSTDBA_STATE m_stateBeforeOptions;
     HRESULT m_hrFinal;
 
+    BOOL m_fStartedExecution;
     DWORD m_dwCalculatedCacheProgress;
     DWORD m_dwCalculatedExecuteProgress;
 
@@ -2811,6 +2896,7 @@ private:
     BOOL m_fSuppressOptionsUI;
     BOOL m_fSuppressDowngradeFailure;
     BOOL m_fSuppressRepair;
+    BOOL m_fShowVersion;
 
     STRINGDICT_HANDLE m_sdOverridableVariables;
 

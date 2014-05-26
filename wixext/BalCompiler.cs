@@ -126,7 +126,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     }
                     break;
                 default:
-                    this.Core.UnexpectedElement(parentElement, parentElement);
+                    this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
                     break;
             }
         }
@@ -217,6 +217,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             YesNoType suppressOptionsUI = YesNoType.NotSet;
             YesNoType suppressDowngradeFailure = YesNoType.NotSet;
             YesNoType suppressRepair = YesNoType.NotSet;
+            YesNoType showVersion = YesNoType.NotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -253,6 +254,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "SuppressRepair":
                             suppressRepair = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "ShowVersion":
+                            showVersion = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -338,6 +342,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     if (YesNoType.Yes == suppressRepair)
                     {
                         row[2] = 1;
+                    }
+
+                    if (YesNoType.Yes == showVersion)
+                    {
+                        row[3] = 1;
                     }
                 }
             }
