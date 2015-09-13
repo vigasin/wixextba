@@ -237,6 +237,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string launchTargetElevatedId = null;
             string launchArguments = null;
             YesNoType launchHidden = YesNoType.NotSet;
+            string launchWorkingDir = null;
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
@@ -247,6 +248,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             YesNoType suppressDowngradeFailure = YesNoType.NotSet;
             YesNoType suppressRepair = YesNoType.NotSet;
             YesNoType showVersion = YesNoType.NotSet;
+            YesNoType supportCacheOnly = YesNoType.NotSet;
+            YesNoType showFilesInUse = YesNoType.NotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -265,6 +268,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "LaunchHidden":
                             launchHidden = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "LaunchWorkingFolder":
+                            launchWorkingDir = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
                         case "LicenseFile":
                             licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
@@ -295,6 +301,12 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "ShowVersion":
                             showVersion = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "SupportCacheOnly":
+                            supportCacheOnly = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "ShowFilesInUse":
+                            showFilesInUse = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -349,6 +361,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateVariableRow(sourceLineNumbers, "LaunchHidden", "yes", "string", false, false);
                 }
 
+                if (!String.IsNullOrEmpty(launchWorkingDir))
+                {
+                    this.Core.CreateVariableRow(sourceLineNumbers, "LaunchWorkingFolder", launchWorkingDir, "string", false, false);
+                }
+
                 if (!String.IsNullOrEmpty(licenseFile))
                 {
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaLicenseRtf", licenseFile, false);
@@ -400,6 +417,16 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     if (YesNoType.Yes == showVersion)
                     {
                         row[3] = 1;
+                    }
+
+                    if (YesNoType.Yes == showFilesInUse)
+                    {
+                        row[4] = 1;
+                    }
+
+                    if (YesNoType.Yes == supportCacheOnly)
+                    {
+                        row[5] = 1;
                     }
                 }
             }
