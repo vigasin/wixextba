@@ -396,7 +396,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixExtbaThemeWxl", localizationFile, false);
                 }
 
-                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair)
+                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair || YesNoType.Yes == showVersion || YesNoType.Yes == supportCacheOnly || YesNoType.Yes == showFilesInUse)
                 {
                     Row row = this.Core.CreateRow(sourceLineNumbers, "WixExtbaOptions");
                     if (YesNoType.Yes == suppressOptionsUI)
