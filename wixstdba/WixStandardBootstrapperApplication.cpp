@@ -1878,6 +1878,25 @@ LExit:
 
         switch (uMsg)
         {
+        // if we have image (or other owner-draw ctrl) on page, controls with over it and Alt pressed:
+        case WM_SYSCOMMAND:
+            if(SC_KEYMENU == wParam)
+            {
+                ::RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+            }
+            break;
+
+        // if we have image (or other owner-draw ctrl) on page, controls with over it and Alt+Click:
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_MOUSEACTIVATE:
+            if(GetKeyState(VK_MENU) < 0)
+            {
+                ::RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+            }
+            break;
+
         case WM_NCCREATE:
             {
             LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
@@ -2447,6 +2466,11 @@ LExit:
                 {
                     BOOL fShowRestartButton = FALSE;
                     BOOL fLaunchTargetExists = FALSE;
+                    LPWSTR sczLaunchTargetText = NULL;
+                    LPWSTR sczLaunchTargetUnformattedText = NULL;
+                    BOOL fLaunchTargetFileExists = FALSE;
+                    HRESULT hr;
+
                     if (m_fRestartRequired)
                     {
                         if (BOOTSTRAPPER_RESTART_PROMPT == m_command.restart)
@@ -2457,9 +2481,16 @@ LExit:
                     else if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_LAUNCH_BUTTON))
                     {
                         fLaunchTargetExists = BalStringVariableExists(WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH);
+
+                        hr = BalGetStringVariable(WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH, &sczLaunchTargetUnformattedText);
+                        if (SUCCEEDED(hr))
+                        {
+                            BalFormatString(sczLaunchTargetUnformattedText, &sczLaunchTargetText);
+                            fLaunchTargetFileExists = PathFileExistsW(sczLaunchTargetText);
+                        }
                     }
 
-                    ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_LAUNCH_BUTTON, fLaunchTargetExists && BOOTSTRAPPER_ACTION_UNINSTALL < m_plannedAction);
+                    ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_LAUNCH_BUTTON, fLaunchTargetExists && fLaunchTargetFileExists && BOOTSTRAPPER_ACTION_UNINSTALL < m_plannedAction);
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_SUCCESS_RESTART_TEXT, fShowRestartButton);
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_SUCCESS_RESTART_BUTTON, fShowRestartButton);
                     
