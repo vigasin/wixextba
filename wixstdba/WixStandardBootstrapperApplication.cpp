@@ -371,7 +371,7 @@ public: // IBootstrapperApplication
                         m_fPrereqAlreadyInstalled = FALSE;
                         break;
                     }
-        		}
+                }
             }
         }
 
@@ -416,6 +416,8 @@ public: // IBootstrapperApplication
         if (m_fPrereq)
         {
             *pRequestedState = BOOTSTRAPPER_REQUEST_STATE_NONE;
+        } else {
+            *pRequestedState = BOOTSTRAPPER_REQUEST_STATE_ABSENT;
         }
 
         return CheckCanceled() ? IDCANCEL : IDOK;
@@ -453,7 +455,7 @@ public: // IBootstrapperApplication
                     }
                 }
                 else
-        		{
+                {
                     // If the InstallCondition is missing, then it should always be installed.
                     fInstall = TRUE;
                 }
@@ -551,8 +553,8 @@ public: // IBootstrapperApplication
             // If something started executing, leave it in the overall progress text.
             if (!m_fStartedExecution)
             {
-            	ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, wz);
-        	}
+                ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, wz);
+            }
         }
 
         return __super::OnCachePackageBegin(wzPackageId, cCachePayloads, dw64PackageCacheSize);
@@ -1035,9 +1037,9 @@ private: // privates
         }
         else
         {
-	        // Okay, we're ready for packages now.
-    	    pThis->SetState(WIXSTDBA_STATE_INITIALIZED, hr);
-        	::PostMessageW(pThis->m_hWnd, BOOTSTRAPPER_ACTION_HELP == pThis->m_command.action ? WM_WIXSTDBA_SHOW_HELP : WM_WIXSTDBA_DETECT_PACKAGES, 0, 0);
+            // Okay, we're ready for packages now.
+            pThis->SetState(WIXSTDBA_STATE_INITIALIZED, hr);
+            ::PostMessageW(pThis->m_hWnd, BOOTSTRAPPER_ACTION_HELP == pThis->m_command.action ? WM_WIXSTDBA_SHOW_HELP : WM_WIXSTDBA_DETECT_PACKAGES, 0, 0);
         }
 
         // message pump
@@ -1201,8 +1203,8 @@ LExit:
         }
         else
         {
-        	hr = ParseBootrapperApplicationDataFromXml(pixdManifest);
-        	BalExitOnFailure(hr, "Failed to read bootstrapper application data.");
+            hr = ParseBootrapperApplicationDataFromXml(pixdManifest);
+            BalExitOnFailure(hr, "Failed to read bootstrapper application data.");
         }
 
     LExit:
@@ -2563,8 +2565,8 @@ LExit:
                         {
                             if (sczUnformattedText)
                             {
-                            	StrAllocString(&sczText, sczUnformattedText, 0);
-                        	}
+                                StrAllocString(&sczText, sczUnformattedText, 0);
+                            }
                         }
                         else if (E_MBAHOST_NET452_ON_WIN7RTM == m_hrFinal)
                         {
@@ -2575,7 +2577,7 @@ LExit:
                         }
                         else
                         {
-                        	StrAllocFormatted(&sczText, L"0x%08x - %ls", m_hrFinal, sczUnformattedText);
+                            StrAllocFormatted(&sczText, L"0x%08x - %ls", m_hrFinal, sczUnformattedText);
                         }
 
                         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_FAILURE_MESSAGE_TEXT, sczText);
@@ -3066,9 +3068,9 @@ LExit:
             }
 
             hr = ShelExec(sczLaunchTarget, sczArguments, L"open", sczLaunchFolder, nCmdShow, m_hWnd, NULL);
-        	BalExitOnFailure1(hr, "Failed to launch target: %ls", sczLaunchTarget);
+            BalExitOnFailure1(hr, "Failed to launch target: %ls", sczLaunchTarget);
 
-        	::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
+            ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
         }
 
     LExit:

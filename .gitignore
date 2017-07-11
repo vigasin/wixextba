@@ -1,0 +1,13 @@
+obj
+*.exe
+BalExtensionExt.opensdf
+BalExtensionExt.sdf
+Examples/Setup.msi
+bafunctions/Release/
+build.log
+build
+ipch/
+wixstdba/Release/
+BalExtensionExt.v12.suo
+Examples/bafunctions.dll
+

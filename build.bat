@@ -22,7 +22,7 @@ if %errorlevel% neq 0 (
 copy build\bafunctions.dll Examples /y
 
 pushd Examples
-Call Build
+REM Call Build
 popd
 
 echo.
